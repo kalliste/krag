@@ -1,0 +1,7 @@
+.*.swp
+config.php
+/cache/
+/vendor/
+.rg.rc
+.DS_Store
+composer.lock
