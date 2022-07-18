@@ -6,9 +6,8 @@ class DB
 {
     private \PDO $conn;
     public string $dbType;
-    public $columnQuoteChar;
-    public $columnQuoteFunc;
-    public $randomFuncSQL;
+    public string $columnQuoteChar;
+    public string $randomFuncSQL;
 
     public function __construct(
         public string $dsn,
@@ -26,44 +25,18 @@ class DB
         {
         case 'pgsql':
             $this->columnQuoteChar = '"';
-            $this->columnQuoteFunc = [$this, 'keyEqualsValue'];
             $this->randomFuncSQL = 'RANDOM()';
             break;
         case 'sqlsrv':
             $this->columnQuoteChar = '"';
-            $this->columnQuoteFunc = [$this, 'keyEqualsValue'];
             $this->randomFuncSQL = 'RAND()';
             break;
         case 'mysql':
         default:
             $this->columnQuoteChar = '`';
-            $this->columnQuoteFunc = [$this, 'backtickKeyEqualsValue'];
             $this->randomFuncSQL = 'RAND()';
             break;
         }
-    }
-
-    public function keyEqualsValue(mixed $item, string $key, string $table = '')
-    {
-        if ($table)
-        {
-            return $table.".".$key."='".$item."'";
-        }
-        return $key."='".$item."'";
-    }
-
-    public function backtickKeyEqualsValue(mixed $item, string $key, string $table = '')
-    {
-        if ($table)
-        {
-            return "`".$table."`.`".$key."`='".$item."'";
-        }
-        return "`".$key."`='".$item."'";
-    }
-
-    public function quoteColumns(array $arr)
-    {
-        return array_map($this->columnQuoteFunc, $arr);
     }
 
     public function begin()
