@@ -4,6 +4,7 @@ namespace Krag;
 
 class DB
 {
+
     private \PDO $conn;
     public string $dbType;
     public string $columnQuoteChar;

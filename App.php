@@ -7,11 +7,12 @@ class App
 
     protected array $controllers = [];
     protected array $methodTree = [];
-    protected array $globalFetchers = [];
 
     public function __construct(
         protected Views $views,
         protected string $controllerPath = "controllers",
+        protected array $globalFetchers = [],
+        protected bool $registerControllersOnRun = true,
     ) {}
 
     protected function isHiddenControllerMethod($class, $methodName) : bool {
@@ -55,8 +56,12 @@ class App
         return [];
     }
 
-    protected function registerController(object $controller, string $name)
+    public function registerController(object $controller, ?string $name = null)
     {
+        if (!$name)
+        {
+            $name = get_class($controller);
+        }
         $this->controllers[$name] = $controller;
         $this->methodTree[$name] = $this->mapMethods($controller);
     }
@@ -123,7 +128,10 @@ class App
     public function run(array $request)
     {
         $this->preFlight();
-        $this->registerControllers();
+        if ($this->registerControllersOnRun)
+        {
+            $this->registerControllers();
+        }
         [$controller, $controllerName, $methodName, $arguments] = $this->findHandler($request);
         $methodData = $this->callHandler($controller, $methodName, $arguments, $request);
         $allData = array_merge($this->processGlobalFetchers($request), $methodData);

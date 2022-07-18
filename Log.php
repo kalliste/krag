@@ -4,6 +4,7 @@ namespace Krag;
 
 enum LogLevel: int
 {
+
     case TRACE = 10;
     case DEBUG = 20;
     case INFO = 30;
@@ -23,6 +24,7 @@ enum LogLevel: int
             LogLevel::FATAL => 'fatal',
         };
     }
+
 }
 
 class LogEntry
@@ -40,6 +42,7 @@ class LogEntry
 
 class Log
 {
+
     public array $messages = [];
 
     public function __construct(
