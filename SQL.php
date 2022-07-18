@@ -36,7 +36,7 @@ class SQL
         return "GROUP BY ".$c.implode("$c, $c", $cols).$c;
     }
 
-    private function orderPart(string $sort, string|bool $maybeDesc = '') : string
+    private function orderPart(string $sort, ?string $maybeDesc = null) : string
     {
         $c = $this->db->columnQuoteChar;
         $ret = $c.$sort.$c." ";
@@ -47,7 +47,7 @@ class SQL
         return $ret;
     }
 
-    public function order(string $sort, string|bool $maybeDesc = '', ...$more)
+    public function order(string $sort, ?string $maybeDesc = null, ...$more)
     {
         $ret = " ORDER BY ".$this->orderPart($sort, $maybeDesc);
         $moreSorts = [];

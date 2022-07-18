@@ -30,7 +30,7 @@ class Log
     public array $messages = [];
 
     public function __construct(
-        public string $module,
+        public ?string $module = null,
         public ?Log $leader = null,
     ) {}
 
@@ -39,7 +39,7 @@ class Log
         return new static($module, $this);
     }
 
-    private function handleLog(LogLevel $level, string $message, array $data = [], string $module = '')
+    private function handleLog(LogLevel $level, string $message, array $data = [], ?string $module = null)
     {
         if (!$module)
         {
@@ -55,7 +55,7 @@ class Log
         }
     }
 
-    public function filter(LogLevel $minLevel = LogLevel::TRACE, bool|string $module = false)
+    public function filter(LogLevel $minLevel = LogLevel::TRACE, ?string $module = null)
     {
         $ret = [];
         foreach ($this->messages as $message)
@@ -70,32 +70,32 @@ class Log
         return $ret;
     }
 
-    public function trace(string $message, array $data = [], string $module = '')
+    public function trace(string $message, array $data = [], ?string $module = null)
     {
         $this->handleLog(LogLevel::TRACE, $message, $data, $module);
     }
 
-    public function debug(string $message, array $data = [], string $module = '')
+    public function debug(string $message, array $data = [], ?string $module = null)
     {
         $this->handleLog(LogLevel::DEBUG, $message, $data, $module);
     }
 
-    public function info(string $message, array $data = [], string $module = '')
+    public function info(string $message, array $data = [], ?string $module = null)
     {
         $this->handleLog(LogLevel::INFO, $message, $data, $module);
     }
 
-    public function warn(string $message, array $data = [], string $module = '')
+    public function warn(string $message, array $data = [], ?string $module = null)
     {
         $this->handleLog(LogLevel::WARN, $message, $data, $module);
     }
 
-    public function error(string $message, array $data = [], string $module = '')
+    public function error(string $message, array $data = [], ?string $module = null)
     {
         $this->handleLog(LogLevel::ERROR, $message, $data, $module);
     }
 
-    public function fatal(string $message, array $data = [], string $module = '')
+    public function fatal(string $message, array $data = [], ?string $module = null)
     {
         $this->handleLog(LogLevel::FATAL, $message, $data, $module);
     }
