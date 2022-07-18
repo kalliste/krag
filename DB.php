@@ -67,7 +67,7 @@ class DB
         }
     }
 
-    public function query(string $query)
+    public function query(string $query) : object
     {
         if (is_object($this->log))
         {
@@ -95,7 +95,7 @@ class DB
         return $result->fetch(\PDO::FETCH_NUM);
     }
 
-    public function updateBlob(string $table, string $column, string $blob, string $strCondtiions = '')
+    public function updateBlob(string $table, string $column, string $blob, string $strCondtiions = '') : object
     {
         $c = $this->columnQuoteChar;
         $statement = $this->conn->prepare("UPDATE ".$table." SET ".$c.$column.$c." = ? ".$strCondtiions);
