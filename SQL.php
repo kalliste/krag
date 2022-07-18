@@ -34,11 +34,17 @@ class SQL
         return $key."='".$value."'";
     }
 
-    public function multipleFieldsEqualValues(array $conditions, ?string $table = null) : string
+    public function fieldsEqualValues(array $conditions, ?string $table = null) : string
     {
         $ret = '';
+        $first = true;
         foreach ($conditions as $k => $v)
         {
+            if (!$first)
+            {
+                $ret .= ', ';
+            }
+            $first = false;
             $ret .= $this->fieldEqualsValue($k, $v, $table);
         }
         return $ret;
@@ -49,7 +55,7 @@ class SQL
         $where = ($additional) ? ' ' : ' WHERE (1=1) ';
         if (count($conditions))
         {
-            $keyEqualsVal = $this->multipleFieldsEqualValues($conditions, $table);
+            $keyEqualsVal = $this->fieldsEqualValues($conditions, $table);
             $where .= ' AND ('.implode(') AND (', $keyEqualsVal).') ';
         }
         return $where;
@@ -151,12 +157,12 @@ class SQL
         $table = $this->tableEscape($table);
         $columns = array_keys(reset($records));
         $line = 'INSERT INTO '.$table.' ('.$this->columnEscape($columns).') VALUES ';
-        $i = 0;
+        $first = true;
         foreach ($records as $record) {
-            $i++;
-            if ($i > 1) {
+            if (!$first) {
                 $line .= ', ';
             }
+            $first = false;
             $line .= "('".implode("', '", $this->escape($record))."')";
         }
         return $line;
@@ -199,9 +205,9 @@ class SQL
         if (count($newData))
         {
             $table = $this->tableEscape($table);
-            $keyEqualsVal = $this->multipleFieldsEqualValues($newData);
+            $keyEqualsVal = $this->fieldsEqualValues($newData);
             $where = $this->where($conditions);
-            $query = 'UPDATE '.$table.' SET '.implode(", ", $keyEqualsVal).$where;
+            $query = 'UPDATE '.$table.' SET '.$keyEqualsVal.$where;
             $result = $this->db->query($query);
             return $this->db->affectedRows($result);
         }
