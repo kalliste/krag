@@ -14,21 +14,9 @@ class DB
         public string $dsn,
         private string $userName,
         private string $password,
-        public $logQueryHandler = false,
-        public $logErrorHandler = false,
-        public $connectionFailHandler = false
-    )
-    {
-        try
-        {
-            $this->conn = new \PDO($dsn, $userName, $password);
-        }
-        catch (\PDOException $e) {
-            if ($connectionFailHandler)
-            {
-                call_user_func_array($failHandler, [$e]);
-            }
-        }
+        ?Log $log = null,
+    ) {
+        $this->conn = new \PDO($dsn, $userName, $password);
         preg_match('/(.*):/', $dsn, $matches);
         if ($matches)
         {
@@ -71,7 +59,6 @@ class DB
             return "`".$table."`.`".$key."`='".$item."'";
         }
         return "`".$key."`='".$item."'";
-
     }
 
     public function quoteColumns(array $arr)
@@ -98,21 +85,19 @@ class DB
     {
         if ($obj->errorCode() != '00000')
         {
-            if ($this->logErrorHandler)
+            if (is_object($this->log))
             {
-                [$sqlState, $driverCode, $driverMessage] = $obj->errorInfo();
-                $logData = compact('sqlState', 'driverCode', 'driverMessage');
-                call_user_func_array($this->logErrorHandler, [$driverMessage, $logData]);
+                [$sqlState, $driverCode, $message] = $obj->errorInfo();
+                $this->log->error($message, compact('sqlState', 'driverCode'));
             }
         }
-
     }
 
     public function query(string $query)
     {
-        if ($this->logQueryHandler)
+        if (is_object($this->log))
         {
-            call_user_func_array($this->logQueryHandler, $query);
+            $this->log->debug($query);
         }
         $result = $this->conn->query($query);
         if (is_object($return))
