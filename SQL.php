@@ -47,7 +47,7 @@ class SQL
         return $ret;
     }
 
-    public function order(string $sort, ?string $maybeDesc = null, ...$more)
+    public function order(string $sort, ?string $maybeDesc = null, ...$more) : string
     {
         $ret = " ORDER BY ".$this->orderPart($sort, $maybeDesc);
         $moreSorts = [];

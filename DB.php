@@ -84,12 +84,12 @@ class DB
         return $result;
     }
 
-    public function fetchAssoc(object $result)
+    public function fetchAssoc(object $result) : array
     {
         return $result->fetch(\PDO::FETCH_ASSOC);
     }
 
-    public function fetchRow(object $result)
+    public function fetchRow(object $result) : array
     {
         return $result->fetch(\PDO::FETCH_NUM);
     }
@@ -110,17 +110,17 @@ class DB
         $this->conn->closeCursor();
     }
 
-    public function insertId()
+    public function insertId() : int
     {
         $this->conn->lastInsertId();
     }
 
-    public function affectedRows($result)
+    public function affectedRows($result) : int
     {
         return $result->rowCount();
     }
 
-    public function escape(string|array $toEscape)
+    public function escape(string|array $toEscape) : string
     {
         if (is_array($toEscape))
         {

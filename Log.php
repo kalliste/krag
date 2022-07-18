@@ -72,7 +72,7 @@ class Log
         }
     }
 
-    public function filter(LogLevel $minLevel = LogLevel::TRACE, ?string $module = null)
+    public function filter(LogLevel $minLevel = LogLevel::TRACE, ?string $module = null) : array
     {
         $ret = [];
         foreach ($this->messages as $message)
