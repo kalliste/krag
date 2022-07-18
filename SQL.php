@@ -124,7 +124,7 @@ class SQL
 
     public function from(string $table, ?string $alias = null) : SQL
     {
-        $ret = 'FROM '.$this->db->tableEscape($table);
+        $ret = ' FROM '.$this->db->tableEscape($table);
         $ret .= (is_string($alias)) ? ' AS '.$this->db->aliasEscape($alias) : '';
         $this->query .= $ret;
         return $this;
@@ -168,7 +168,7 @@ class SQL
 
     public function join(string $table, ?string $alias = null) : SQL
     {
-        $ret = 'JOIN '.$this->db->tableEscape($table);
+        $ret = ' JOIN '.$this->db->tableEscape($table);
         $ret .= (is_string($alias)) ? ' AS '.$this->db->aliasEscape($alias) : '';
         $this->query .= $ret;
         return $this;
@@ -214,7 +214,7 @@ class SQL
     public function group(string|array $groupBy) : SQL
     {
         $cols = (is_array($groupBy)) ? $groupBy : array($groupBy);
-        $ret = 'GROUP BY '.$this->db->columnEscape($cols);
+        $ret = ' GROUP BY '.$this->db->columnEscape($cols);
         $this->query .= $ret;
         return $this;
     }
@@ -246,7 +246,7 @@ class SQL
     {
         $start = strval($per_page * ($page - 1));
         $count = strval($per_page);
-        $ret = 'LIMIT '.$start.', '.$count.' ';
+        $ret = ' LIMIT '.$start.', '.$count.' ';
         $this->query .= $ret;
         return $this;
     }
