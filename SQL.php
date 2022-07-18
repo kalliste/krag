@@ -4,13 +4,8 @@ namespace Krag;
 
 class SQL
 {
-    public string $columnQuoteCharLeft;
-    public string $columnQuoteCharRight;
 
-    public function __construct(private DB $db) {
-        $this->columnQuoteCharLeft = $db->columnQuoteCharLeft;
-        $this->columnQuoteCharRight = $db->columnQuoteCharRight;
-    }
+    public function __construct(private DB $db) {}
 
     public function escape(string|array $toEscape) : string
     {
@@ -27,34 +22,16 @@ class SQL
         return $this->db->tableEscape($toEscape);
     }
 
-    public function tableQuoteAndEscape(string $table) : string
-    {
-        $cl = $this->columnQuoteCharLeft;
-        $cr = $this->columnQuoteCharRight;
-        $table = $this->tableEscape($table);
-        return $cl.$table.$cr;
-    }
-
-    public function columnsList(array $columns)
-    {
-        $cl = $this->columnQuoteCharLeft;
-        $cr = $this->columnQuoteCharRight;
-        $columns = $this->columnEscape($columns);
-        return $cl.implode("$cr, $cl", $columns).$cr;
-    }
-
     public function fieldEqualsValue(string $key, $value, ?string $table = null) : string
     {
-        $cl = $this->columnQuoteCharLeft;
-        $cr = $this->columnQuoteCharRight;
         $key = $this->columnEscape($key);
         $value = $this->escape($value);
         if ($table)
         {
-            $table = $this->tableQuoteAndEscape($table);
-            return $table.".".$cl.$key.$cr."='".$value."'";
+            $table = $this->tableEscape($table);
+            return $table.'.'.$key."='".$value."'";
         }
-        return $cl.$key.$cr."='".$value."'";
+        return $key."='".$value."'";
     }
 
     public function multipleFieldsEqualValues(array $conditions, ?string $table = null) : string
@@ -73,7 +50,7 @@ class SQL
         if (count($conditions))
         {
             $keyEqualsVal = $this->multipleFieldsEqualValues($conditions, $table);
-            $where .= " AND (".implode(") AND (", $keyEqualsVal).") ";
+            $where .= ' AND ('.implode(') AND (', $keyEqualsVal).') ';
         }
         return $where;
     }
@@ -81,25 +58,18 @@ class SQL
     public function group(string|array $groupBy) : string
     {
         $cols = (is_array($groupBy)) ? $groupBy : array($groupBy);
-        return "GROUP BY ".$this->columnsList($cols);
+        return 'GROUP BY '.$this->columnEscape($cols);
     }
 
     private function orderPart(string $sort, ?string $maybeDesc = null) : string
     {
         $sort = $this->columnEscape($sort);
-        $cl = $this->columnQuoteCharLeft;
-        $cr = $this->columnQuoteCharRight;
-        $ret = $cl.$sort.$cr." ";
-        if ($maybeDesc)
-        {
-            $ret .= "DESC ";
-        }
-        return $ret;
+        return ($maybeDesc) ? $sort.' ' : $sort.' Desc';
     }
 
     public function order(string $sort, ?string $maybeDesc = null, ...$more) : string
     {
-        $ret = " ORDER BY ".$this->orderPart($sort, $maybeDesc);
+        $ret = ' ORDER BY '.$this->orderPart($sort, $maybeDesc);
         $moreSorts = [];
         foreach ($more as $k => $v)
         {
@@ -123,7 +93,7 @@ class SQL
     {
         $start = strval($per_page * ($page - 1));
         $count = strval($per_page);
-        return "LIMIT $start, $count ";
+        return 'LIMIT '.$start.', '.$count.' ';
     }
 
     public function value($query) : mixed
@@ -172,21 +142,20 @@ class SQL
 
     private function deleteSQL(string $table, array $conditions = []) : string
     {
-        $table = $this->tableQuoteAndEscape($table);
-        return "DELETE FROM ".$table.$this->where($conditions);
+        $table = $this->tableEscape($table);
+        return 'DELETE FROM '.$table.$this->where($conditions);
     }
 
     private function insertSQL(string $table, array $records) : string
     {
-        $table = $this->tableQuoteAndEscape($table);
+        $table = $this->tableEscape($table);
         $columns = array_keys(reset($records));
-        $columnsStr = $this->columnsList($columns);
-        $line = sprintf('INSERT INTO %s (%s) VALUES ', $table, $columnsStr);
+        $line = 'INSERT INTO '.$table.' ('.$this->columnEscape($columns).') VALUES ';
         $i = 0;
         foreach ($records as $record) {
             $i++;
             if ($i > 1) {
-                $line .= ",";
+                $line .= ', ';
             }
             $line .= "('".implode("', '", $this->escape($record))."')";
         }
@@ -229,9 +198,8 @@ class SQL
     {
         if (count($newData))
         {
-            $table = $this->tableQuoteAndEscape($table);
-            $escaped = $this->escape($newData);
-            $keyEqualsVal = $this->multipleFieldsEqualValues($conditions);
+            $table = $this->tableEscape($table);
+            $keyEqualsVal = $this->multipleFieldsEqualValues($newData);
             $where = $this->where($conditions);
             $query = 'UPDATE '.$table.' SET '.implode(", ", $keyEqualsVal).$where;
             $result = $this->db->query($query);

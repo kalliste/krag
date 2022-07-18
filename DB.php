@@ -114,7 +114,7 @@ class DB
         return $result->rowCount();
     }
 
-    public function escape(string|array $toEscape) : string
+    public function escape(string|array $toEscape) : string|array
     {
         if (is_array($toEscape))
         {
@@ -125,16 +125,20 @@ class DB
 
     public function columnEscape(string|array $toEscape) : string
     {
+        $cl = $this->columnQuoteCharLeft;
+        $cr = $this->columnQuoteCharRight;
         if (is_array($toEscape))
         {
-            return array_map([$this, 'columnEscape'], $toEscape);
+            return implode(', ', array_map([$this, 'columnEscape'], $toEscape));
         }
-        return str_replace(['`', '"', "'", '|', ';'], '', $toEscape);
+        return $cl.str_replace(['`', '"', "'", '|', ';'], '', $toEscape).$cr;
     }
 
     public function tableEscape(string $toEscape) : string
     {
-        return str_replace(['`', '"', "'", '|', ';'], '', $toEscape);
+        $cl = $this->columnQuoteCharLeft;
+        $cr = $this->columnQuoteCharRight;
+        return $cl.str_replace(['`', '"', "'", '|', ';'], '', $toEscape).$cr;
     }
 
     public function updateBlob(string $table, string $column, string $blob, string $where = '') : object
