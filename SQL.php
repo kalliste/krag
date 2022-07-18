@@ -9,9 +9,27 @@ class SQL
         private DB $db,
     ) {}
 
+    public function escape(string|array $toEscape) : string
+    {
+        return $this->db->escape($toEscape);
+    }
+
+    public function columnEscape(string|array $toEscape) : string
+    {
+        return $this->db->columnEscape($toEscape);
+    }
+
+    public function tableEscape(string $toEscape) : string
+    {
+        return $this->db->tableEscape($toEscape);
+    }
+
     public function fieldEqualsValue(string $key, $value, ?string $table = null) : string
     {
         $c = $this->db->columnQuoteChar;
+        $key = $this->columnEscape($key);
+        $value = $this->escape($value);
+        $table = $this->tableEscape($table);
         if ($table)
         {
             return $c.$table.$c.".".$c.$key.$c."='".$value."'";
@@ -44,11 +62,13 @@ class SQL
     {
         $c = $this->db->columnQuoteChar;
         $cols = (is_array($groupBy)) ? $groupBy : array($groupBy);
+        $cols = $this->columnEscape($cols);
         return "GROUP BY ".$c.implode("$c, $c", $cols).$c;
     }
 
     private function orderPart(string $sort, ?string $maybeDesc = null) : string
     {
+        $sort = $this->columnEscape($sort);
         $c = $this->db->columnQuoteChar;
         $ret = $c.$sort.$c." ";
         if ($maybeDesc)
@@ -133,14 +153,16 @@ class SQL
 
     private function deleteSQL(string $table, array $conditions = []) : string
     {
+        $table = $this->tableEscape($table);
         return "DELETE FROM ".$table.$this->where($conditions);
     }
 
     private function insertSQL(string $table, array $records) : string
     {
         $c = $this->db->columnQuoteChar;
-        $first = reset($records);
-        $columnsStr = $c.implode("$c, $c", array_keys($first)).$c;
+        $table = $this->tableEscape($table);
+        $cols = $this->columnEscape(array_keys(reset($records)));
+        $columnsStr = $c.implode("$c, $c", $cols).$c;
         $line = sprintf("INSERT INTO %s (%s) VALUES ", $table, $columnsStr);
         $i = 0;
         foreach ($records as $record) {
@@ -148,7 +170,7 @@ class SQL
             if ($i > 1) {
                 $line .= ",";
             }
-            $line .= "('".implode("', '", $this->db->escape($record))."')";
+            $line .= "('".implode("', '", $this->escape($record))."')";
         }
         return $line;
     }
@@ -190,7 +212,8 @@ class SQL
         if (count($newData))
         {
             $c = $this->db->columnQuoteChar;
-            $escaped = $this->db->escape($newData);
+            $table = $this->tableEscape($table);
+            $escaped = $this->escape($newData);
             $keyEqualsVal = $this->multipleFieldsEqualValues($conditions);
             $where = $this->where($conditions);
             $query = "UPDATE ".$table." SET ".implode(", ", $keyEqualsVal).$where;

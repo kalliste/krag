@@ -130,6 +130,20 @@ class DB
         return substr($this->conn->quote($str), 1, -1);
     }
 
+    public function columnEscape(string|array $toEscape) : string
+    {
+        if (is_array($toEscape))
+        {
+            return array_map([$this, 'columnEscape'], $toEscape);
+        }
+        return str_replace(['`', '"', "'", '|'], '', $toEscape);
+    }
+
+    public function tableEscape(string $toEscape) : string
+    {
+        return str_replace(['`', '"', "'", '|'], '', $toEscape);
+    }
+
 }
 
 ?>
