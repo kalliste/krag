@@ -42,7 +42,7 @@ class SQL
     private function orderPart(string $sort, ?string $maybeDesc = null) : string
     {
         $sort = $this->db->columnEscape($sort);
-        return ($maybeDesc) ? $sort.' ' : $sort.' DESC';
+        return ($maybeDesc) ? $sort.' DESC' : $sort.' ';
     }
 
     private function deleteSQL(string $table, array $conditions = []) : string
