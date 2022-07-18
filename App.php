@@ -7,17 +7,12 @@ class App
 
     protected array $controllers = [];
     protected array $methodTree = [];
-    protected array $templateGlobalFetchers = [];
+    protected array $globalFetchers = [];
     protected array $request = [];
 
     public function __construct(
+        protected Views $views,
         protected string $controllerPath = "controllers",
-        protected string $templatePath = "templates",
-        protected array $templateOptions = [ 
-            'cache' => false,
-            'autoescape' => 'name',
-            'auto_reload' => true,
-        ],
     ) {}
 
     protected function isHiddenControllerMethod($class, $methodName) : bool {
@@ -111,43 +106,19 @@ class App
         return call_user_func_array([$controller, $methodName], $pass);
     }
 
-    protected function processTemplateGlobalFetchers() : array
+    protected function processGlobalFetchers() : array
     {
         $ret = [];
-        foreach ($this->templateGlobalFetchers as $name => $method)
+        foreach ($this->globalFetchers as $name => $method)
         {
             $ret[$name] = call_user_func($method);
         }
         return $ret;
     }
 
-    protected function templateFile(string $controllerName, string $methodName) : string
+    public function addGlobalFetcher(string $name, callable $method)
     {
-        return $methodName.".html.twig";
-    }
-
-    protected function setupTemplateEngine(string $controllerName, string $methodName) : object
-    {
-        $loader = new \Twig\Loader\FilesystemLoader($this->templatePath);
-        return new \Twig\Environment($loader, $this->templateOptions);
-    }
-
-    protected function fillTemplate(string $controllerName, string $methodName, array $data) : string
-    {
-        $data = array_merge($this->processTemplateGlobalFetchers(), $data);
-        $engine = $this->setupTemplateEngine($controllerName, $methodName);
-        return $engine->render($this->templateFile($controllerName, $methodName), $data);
-    }
-
-    protected function renderResult(string $controllerName, string $methodName, array $data)
-    {
-        $content = $this->fillTemplate($controllerName, $methodName, $data);
-        print($content);
-    }
-
-    public function addTemplateGlobalFetcher(string $name, callable $method)
-    {
-        $this->templateGlobalFetchers[$name] = $method;
+        $this->globalFetchers[$name] = $method;
     }
 
     public function run(array $request)
@@ -156,8 +127,9 @@ class App
         $this->preFlight();
         $this->registerControllers();
         [$controller, $controllerName, $methodName, $arguments] = $this->findHandler($request);
-        $data = $this->callHandler($controller, $methodName, $arguments, $request);
-        $this->renderResult($controllerName, $methodName, $data);
+        $methodData = $this->callHandler($controller, $methodName, $arguments, $request);
+        $allData = array_merge($this->processGlobalFetchers(), $methodData);
+        $this->views->render($controllerName, $methodName, $allData);
         $this->cleanup();
     }
 
