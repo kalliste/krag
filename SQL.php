@@ -12,27 +12,27 @@ class SQL
         $this->columnQuoteCharRight = $db->columnQuoteCharRight;
     }
 
-    public function escape(string|array $toEscape) : SanitizedString
+    public function escape(string|array $toEscape) : string
     {
         return $this->db->escape($toEscape);
     }
 
-    public function columnEscape(string|array $toEscape) : SanitizedString
+    public function columnEscape(string|array $toEscape) : string
     {
         return $this->db->columnEscape($toEscape);
     }
 
-    private function tableEscape(string $toEscape) : SanitizedString
+    public function tableEscape(string $toEscape) : string
     {
         return $this->db->tableEscape($toEscape);
     }
 
-    public function tableQuoteAndEscape(string $table) : SanitizedString
+    public function tableQuoteAndEscape(string $table) : string
     {
         $cl = $this->columnQuoteCharLeft;
         $cr = $this->columnQuoteCharRight;
         $table = $this->tableEscape($table);
-        return SanitizedString($cl.$table.$cr);
+        return $cl.$table.$cr;
     }
 
     public function columnsList(array $columns)
@@ -40,34 +40,34 @@ class SQL
         $cl = $this->columnQuoteCharLeft;
         $cr = $this->columnQuoteCharRight;
         $columns = $this->columnEscape($columns);
-        return SanitizedString($cl.implode("$cr, $cl", $columns).$cr);
+        return $cl.implode("$cr, $cl", $columns).$cr;
     }
 
-    public function fieldEqualsValue(string $key, $value, ?string $table = null) : SanitizedString
+    public function fieldEqualsValue(string $key, $value, ?string $table = null) : string
     {
         $cl = $this->columnQuoteCharLeft;
         $cr = $this->columnQuoteCharRight;
         $key = $this->columnEscape($key);
         $value = $this->escape($value);
-        $result = $cl.$key.$cr."='".$value."'";
         if ($table)
         {
-            $result = $this->tableQuoteAndEscape($table).'.'.$result;
+            $table = $this->tableQuoteAndEscape($table);
+            return $table.".".$cl.$key.$cr."='".$value."'";
         }
-        return SanitizedString($result);
+        return $cl.$key.$cr."='".$value."'";
     }
 
-    public function multipleFieldsEqualValues(array $conditions, ?string $table = null) : SanitizedString
+    public function multipleFieldsEqualValues(array $conditions, ?string $table = null) : string
     {
         $ret = '';
         foreach ($conditions as $k => $v)
         {
             $ret .= $this->fieldEqualsValue($k, $v, $table);
         }
-        return SanitizedString($ret);
+        return $ret;
     }
 
-    public function where(array $conditions = [], ?string $table = null, bool $additional = false) : SanitizedString
+    public function where(array $conditions = [], ?string $table = null, bool $additional = false) : string
     {
         $where = ($additional) ? ' ' : ' WHERE (1=1) ';
         if (count($conditions))
@@ -75,16 +75,16 @@ class SQL
             $keyEqualsVal = $this->multipleFieldsEqualValues($conditions, $table);
             $where .= " AND (".implode(") AND (", $keyEqualsVal).") ";
         }
-        return SanitizedString($where);
+        return $where;
     }
 
-    public function group(string|array $groupBy) : SanitizedString
+    public function group(string|array $groupBy) : string
     {
         $cols = (is_array($groupBy)) ? $groupBy : array($groupBy);
-        return SanitizedString("GROUP BY ".$this->columnsList($cols));
+        return "GROUP BY ".$this->columnsList($cols);
     }
 
-    private function orderPart(string $sort, ?string $maybeDesc = null) : SanitizedString
+    private function orderPart(string $sort, ?string $maybeDesc = null) : string
     {
         $sort = $this->columnEscape($sort);
         $cl = $this->columnQuoteCharLeft;
@@ -94,10 +94,10 @@ class SQL
         {
             $ret .= "DESC ";
         }
-        return SanitizedString($ret);
+        return $ret;
     }
 
-    public function order(string $sort, ?string $maybeDesc = null, ...$more) : SanitizedString
+    public function order(string $sort, ?string $maybeDesc = null, ...$more) : string
     {
         $ret = " ORDER BY ".$this->orderPart($sort, $maybeDesc);
         $moreSorts = [];
@@ -116,14 +116,14 @@ class SQL
             $maybeDesc = array_key_exists($descColumn, $more) ? $more[$descColumn] : '';
             $ret .= $this->orderPart($v, $maybeDesc);
         }
-        return SanitizedString($ret);
+        return $ret;
     }
 
-    public function limit(int $per_page, int $page = 1) : SanitizedString
+    public function limit(int $per_page, int $page = 1) : string
     {
         $start = strval($per_page * ($page - 1));
         $count = strval($per_page);
-        return SanitizedString("LIMIT $start, $count ");
+        return "LIMIT $start, $count ";
     }
 
     public function value($query) : mixed
@@ -170,13 +170,13 @@ class SQL
         return $ret;
     }
 
-    private function deleteSQL(string $table, array $conditions = []) : SanitizedString
+    private function deleteSQL(string $table, array $conditions = []) : string
     {
         $table = $this->tableQuoteAndEscape($table);
-        return SanitizedString("DELETE FROM ".$table.$this->where($conditions));
+        return "DELETE FROM ".$table.$this->where($conditions);
     }
 
-    private function insertSQL(string $table, array $records) : SanitizedString
+    private function insertSQL(string $table, array $records) : string
     {
         $table = $this->tableQuoteAndEscape($table);
         $columns = array_keys(reset($records));
@@ -190,7 +190,7 @@ class SQL
             }
             $line .= "('".implode("', '", $this->escape($record))."')";
         }
-        return SanitizedString($line);
+        return $line;
     }
 
     private function transactionForLines(array $lines, bool $returnLastInsertId = true) : int
