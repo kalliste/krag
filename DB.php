@@ -7,7 +7,8 @@ class DB
 
     private \PDO $conn;
     public string $dbType;
-    public string $columnQuoteChar;
+    public string $columnQuoteCharLeft;
+    public string $columnQuoteCharRight;
     public string $randomFuncSQL;
 
     public function __construct(
@@ -24,18 +25,21 @@ class DB
         }
         switch($this->dbType)
         {
-        case 'pgsql':
-            $this->columnQuoteChar = '"';
-            $this->randomFuncSQL = 'RANDOM()';
+        case 'mysql':
+            $this->columnQuoteCharLeft = '`';
+            $this->columnQuoteCharRight = '`';
+            $this->randomFuncSQL = 'RAND()';
             break;
         case 'sqlsrv':
-            $this->columnQuoteChar = '"';
+            $this->columnQuoteCharLeft = '[';
+            $this->columnQuoteCharRight = ']';
             $this->randomFuncSQL = 'RAND()';
             break;
-        case 'mysql':
+        case 'pgsql':
         default:
-            $this->columnQuoteChar = '`';
-            $this->randomFuncSQL = 'RAND()';
+            $this->columnQuoteCharLeft = '"';
+            $this->columnQuoteCharRight = '"';
+            $this->randomFuncSQL = 'RANDOM()';
             break;
         }
     }
@@ -95,17 +99,6 @@ class DB
         return $result->fetch(\PDO::FETCH_NUM);
     }
 
-    public function updateBlob(string $table, string $column, string $blob, string $strCondtiions = '') : object
-    {
-        $c = $this->columnQuoteChar;
-        $statement = $this->conn->prepare("UPDATE ".$table." SET ".$c.$column.$c." = ? ".$strCondtiions);
-        $statement->bindParam(1, $blob, \PDO::PARAM_LOB);
-        $this->begin();
-        $statement->execute();
-        $this->commit();
-        return $statement;
-    }
-
     public function close()
     {
         $this->conn->closeCursor();
@@ -136,12 +129,26 @@ class DB
         {
             return array_map([$this, 'columnEscape'], $toEscape);
         }
-        return str_replace(['`', '"', "'", '|'], '', $toEscape);
+        return str_replace(['`', '"', "'", '|', ';'], '', $toEscape);
     }
 
     public function tableEscape(string $toEscape) : string
     {
-        return str_replace(['`', '"', "'", '|'], '', $toEscape);
+        return str_replace(['`', '"', "'", '|', ';'], '', $toEscape);
+    }
+
+    public function updateBlob(string $table, string $column, string $blob, string $strCondtiions = '') : object
+    {
+        $cl = $this->columnQuoteCharLeft;
+        $cr = $this->columnQuoteCharRight;
+        $table = $this->tableEscape($table);
+        $column = $this->columnEscape($column);
+        $statement = $this->conn->prepare("UPDATE ".$cl.$table.$cr." SET ".$cl.$column.$cr." = ? ".$strCondtiions);
+        $statement->bindParam(1, $blob, \PDO::PARAM_LOB);
+        $this->begin();
+        $statement->execute();
+        $this->commit();
+        return $statement;
     }
 
 }

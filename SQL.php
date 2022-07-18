@@ -4,10 +4,13 @@ namespace Krag;
 
 class SQL
 {
+    public string $columnQuoteCharLeft;
+    public string $columnQuoteCharRight;
 
-    public function __construct(
-        private DB $db,
-    ) {}
+    public function __construct(private DB $db) {
+        $this->columnQuoteCharLeft = $db->columnQuoteCharLeft;
+        $this->columnQuoteCharRight = $db->columnQuoteCharRight;
+    }
 
     public function escape(string|array $toEscape) : string
     {
@@ -24,17 +27,34 @@ class SQL
         return $this->db->tableEscape($toEscape);
     }
 
+    public function tableQuoteAndEscape(string $table) : string
+    {
+        $cl = $this->columnQuoteCharLeft;
+        $cr = $this->columnQuoteCharRight;
+        $table = $this->tableEscape($table);
+        return $cl.$table.$cr;
+    }
+
+    public function columnsList(array $columns)
+    {
+        $cl = $this->columnQuoteCharLeft;
+        $cr = $this->columnQuoteCharRight;
+        $columns = $this->columnEscape($columns);
+        return $cl.implode("$cr, $cl", $columns).$cr;
+    }
+
     public function fieldEqualsValue(string $key, $value, ?string $table = null) : string
     {
-        $c = $this->db->columnQuoteChar;
+        $cl = $this->columnQuoteCharLeft;
+        $cr = $this->columnQuoteCharRight;
         $key = $this->columnEscape($key);
         $value = $this->escape($value);
-        $table = $this->tableEscape($table);
         if ($table)
         {
-            return $c.$table.$c.".".$c.$key.$c."='".$value."'";
+            $table = $this->tableQuoteAndEscape($table);
+            return $table.".".$cl.$key.$cr."='".$value."'";
         }
-        return $c.$key.$c."='".$value."'";
+        return $cl.$key.$cr."='".$value."'";
     }
 
     public function multipleFieldsEqualValues(array $conditions, ?string $table = null) : string
@@ -60,17 +80,16 @@ class SQL
 
     public function group(string|array $groupBy) : string
     {
-        $c = $this->db->columnQuoteChar;
         $cols = (is_array($groupBy)) ? $groupBy : array($groupBy);
-        $cols = $this->columnEscape($cols);
-        return "GROUP BY ".$c.implode("$c, $c", $cols).$c;
+        return "GROUP BY ".$this->columnsList($cols);
     }
 
     private function orderPart(string $sort, ?string $maybeDesc = null) : string
     {
         $sort = $this->columnEscape($sort);
-        $c = $this->db->columnQuoteChar;
-        $ret = $c.$sort.$c." ";
+        $cl = $this->columnQuoteCharLeft;
+        $cr = $this->columnQuoteCharRight;
+        $ret = $cl.$sort.$cr." ";
         if ($maybeDesc)
         {
             $ret .= "DESC ";
@@ -153,17 +172,16 @@ class SQL
 
     private function deleteSQL(string $table, array $conditions = []) : string
     {
-        $table = $this->tableEscape($table);
+        $table = $this->tableQuoteAndEscape($table);
         return "DELETE FROM ".$table.$this->where($conditions);
     }
 
     private function insertSQL(string $table, array $records) : string
     {
-        $c = $this->db->columnQuoteChar;
-        $table = $this->tableEscape($table);
-        $cols = $this->columnEscape(array_keys(reset($records)));
-        $columnsStr = $c.implode("$c, $c", $cols).$c;
-        $line = sprintf("INSERT INTO %s (%s) VALUES ", $table, $columnsStr);
+        $table = $this->tableQuoteAndEscape($table);
+        $columns = array_keys(reset($records));
+        $columnsStr = $this->columnsList($columns);
+        $line = sprintf('INSERT INTO %s (%s) VALUES ', $table, $columnsStr);
         $i = 0;
         foreach ($records as $record) {
             $i++;
@@ -211,12 +229,11 @@ class SQL
     {
         if (count($newData))
         {
-            $c = $this->db->columnQuoteChar;
-            $table = $this->tableEscape($table);
+            $table = $this->tableQuoteAndEscape($table);
             $escaped = $this->escape($newData);
             $keyEqualsVal = $this->multipleFieldsEqualValues($conditions);
             $where = $this->where($conditions);
-            $query = "UPDATE ".$table." SET ".implode(", ", $keyEqualsVal).$where;
+            $query = 'UPDATE '.$table.' SET '.implode(", ", $keyEqualsVal).$where;
             $result = $this->db->query($query);
             return $this->db->affectedRows($result);
         }
