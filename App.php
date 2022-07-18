@@ -98,7 +98,7 @@ class App
             }
         }
         $action = ($action == 'index') ? 'index' : 'notFound';
-        return [$this, $action, []];
+        return [$this, 'App', $action, []];
     }
 
     protected function callHandler(object $controller, string $methodName, array $arguments, array $request) : array
