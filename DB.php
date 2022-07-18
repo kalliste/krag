@@ -143,6 +143,11 @@ class DB
         return $cl.$table.$escaped.$cr;
     }
 
+    private function aliasEscape(string $str) : string
+    {
+        return preg_replace('/[^A-Za-z0-9_]/', '', $str);
+    }
+
     public function setBlob(string $query, string $blob) : object
     {
         $statement = $this->conn->prepare($query);

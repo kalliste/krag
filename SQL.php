@@ -5,36 +5,25 @@ namespace Krag;
 class SQL
 {
 
+    private string $query = '';
+
     public function __construct(private DB $db) {}
 
-    public function escape(string|array $toEscape) : string
-    {
-        return $this->db->escape($toEscape);
-    }
+    /************************************************************************/
 
-    public function columnEscape(string|array $toEscape, ?string $table = null) : string
+    private function fieldValue(string $key, $value, ?string $table = null, $operator = '=') : string
     {
-        return $this->db->columnEscape($toEscape, $table);
-    }
-
-    public function tableEscape(string $toEscape) : string
-    {
-        return $this->db->tableEscape($toEscape);
-    }
-
-    public function fieldValue(string $key, $value, ?string $table = null, $operator = '=') : string
-    {
-        $key = $this->columnEscape($key);
-        $value = $this->escape($value);
+        $key = $this->db->columnEscape($key);
+        $value = $this->db->escape($value);
         if ($table)
         {
-            $table = $this->tableEscape($table);
+            $table = $this->db->tableEscape($table);
             return $table.'.'.$key.$operator."'".$value."'";
         }
         return $key.$operator."'".$value."'";
     }
 
-    public function fieldsValues(array $conditions, ?string $table = null, $operator = '=') : string
+    private function fieldsValues(array $conditions, ?string $table = null, $operator = '=') : string
     {
         $ret = '';
         $first = true;
@@ -50,21 +39,53 @@ class SQL
         return $ret;
     }
 
-    public function select(string|array $fields = [], ?string $table = null, bool $additional = false)
+    private function orderPart(string $sort, ?string $maybeDesc = null) : string
     {
-        $ret = ($additional) ? ', ' : 'SELECT ';
-        if (is_string($fields))
-        {
-            $fields = [$fields];
+        $sort = $this->db->columnEscape($sort);
+        return ($maybeDesc) ? $sort.' ' : $sort.' DESC';
+    }
+
+    private function deleteSQL(string $table, array $conditions = []) : string
+    {
+        $table = $this->db->tableEscape($table);
+        return 'DELETE FROM '.$table.$this->where($conditions);
+    }
+
+    private function insertSQL(string $table, array $records) : string
+    {
+        $table = $this->db->tableEscape($table);
+        $columns = array_keys(reset($records));
+        $line = 'INSERT INTO '.$table.' ('.$this->db->columnEscape($columns).') VALUES ';
+        $first = true;
+        foreach ($records as $record) {
+            if (!$first) {
+                $line .= ', ';
+            }
+            $first = false;
+            $line .= "('".implode("', '", $this->db->escape($record))."')";
         }
-        if (count($fields))
-        {
-            $ret .= $this->columnEscape($fields, $table);
+        return $line;
+    }
+
+    private function transactionForLines(array $lines, bool $returnLastInsertId = true) : int
+    {
+        $this->db->begin();
+        foreach ($lines as $line) {
+            $result = $this->db->query($line);
+        }
+        if ($returnLastInsertId) {
+            $ret = $this->db->insertId();
+        }
+        $this->db->commit();
+        if (!$returnLastInsertId) {
+            $ret = $this->db->affectedRows($result);
         }
         return $ret;
     }
 
-    public function selectAliased(string|array $fields = [], ?string $table = null, bool $additional = false)
+    /************************************************************************/
+
+    public function select(string|array $fields = [], ?string $table = null, bool $additional = false) : SQL
     {
         $ret = ($additional) ? ', ' : 'SELECT ';
         if (is_string($fields))
@@ -73,67 +94,132 @@ class SQL
         }
         if (count($fields))
         {
-            $fields = array_map(function($field) { preg_replace('/[^A-Za-z0-9_]/', '', $field); });
+            $ret .= $this->db->columnEscape($fields, $table).' ';
+        }
+        $this->query .= $ret;
+        return $this;
+    }
+
+    public function selectAliased(string|array $fields = [], ?string $table = null, bool $additional = false) : SQL
+    {
+        $ret = ($additional) ? ', ' : 'SELECT ';
+        if (is_string($fields))
+        {
+            $fields = [$fields];
+        }
+        if (count($fields))
+        {
+            $fields = array_map($this->db->aliasEscape(...), $fields);
             $first = true;
             foreach ($fields as $field => $alias)
             {
                 $ret .= $first ? '' : ', ';
-                $ret .= $this->columnEscape($field, $table);
-                $ret .= ' AS '.$alias;
+                $ret .= $this->db->columnEscape($field, $table);
+                $ret .= ' AS '.$alias.' ';
             }
         }
-        return $ret;
+        $this->query .= $ret;
+        return $this;
     }
 
-    public function where(array $conditions = [], ?string $table = null, bool $additional = false, $operator = '') : string
+    public function from(string $table, ?string $alias = null) : SQL
     {
-        $where = ($additional) ? ' ' : ' WHERE (1=1) ';
+        $ret = 'FROM '.$this->db->tableEscape($table);
+        $ret .= (is_string($alias)) ? ' AS '.$this->db->aliasEscape($alias) : '';
+        $this->query .= $ret;
+        return $this;
+    }
+
+    public function left() : SQL
+    {
+        $this->query .= ' LEFT ';
+        return $this;
+    }
+
+    public function right() : SQL
+    {
+        $this->query .= ' RIGHT ';
+        return $this;
+    }
+
+    public function inner() : SQL
+    {
+        $this->query .= ' INNER ';
+        return $this;
+    }
+
+    public function outer() : SQL
+    {
+        $this->query .= ' OUTER ';
+        return $this;
+    }
+
+    public function cross() : SQL
+    {
+        $this->query .= ' CROSS ';
+        return $this;
+    }
+
+    public function natural() : SQL
+    {
+        $this->query .= ' NATURAL ';
+        return $this;
+    }
+
+    public function join(string $table, ?string $alias = null) : SQL
+    {
+        $ret = 'JOIN '.$this->db->tableEscape($table);
+        $ret .= (is_string($alias)) ? ' AS '.$this->db->aliasEscape($alias) : '';
+        $this->query .= $ret;
+        return $this;
+    }
+
+    public function where(array $conditions = [], ?string $table = null, bool $additional = false, $operator = '') : SQL
+    {
+        $ret = ($additional) ? ' ' : ' WHERE (1=1) ';
         if (count($conditions))
         {
             $keyVal = $this->fieldsValues($conditions, $table, $operator);
-            $where .= ' AND ('.implode(') AND (', $keyVal).') ';
+            $ret .= ' AND ('.implode(') AND (', $keyVal).') ';
         }
-        return $where;
+        $this->query .= $ret;
+        return $this;
     }
 
-    public function eq(string $column, mixed $value, ?string $table = null) : string
+    public function eq(string $column, mixed $value, ?string $table = null) : SQL
     {
         return $this->where(array($column => $value), $table, true);
     }
 
-    public function lt(string $column, mixed $value, ?string $table = null) : string
+    public function lt(string $column, mixed $value, ?string $table = null) : SQL
     {
         return $this->where(array($column => $value), $table, true, '<');
     }
 
-    public function lte(string $column, mixed $value, ?string $table = null) : string
+    public function lte(string $column, mixed $value, ?string $table = null) : SQL
     {
         return $this->where(array($column => $value), $table, true, '<=');
     }
 
-    public function gt(string $column, mixed $value, ?string $table = null) : string
+    public function gt(string $column, mixed $value, ?string $table = null) : SQL
     {
         return $this->where(array($column => $value), $table, true, '>');
     }
 
-    public function gte(string $column, mixed $value, ?string $table = null) : string
+    public function gte(string $column, mixed $value, ?string $table = null) : SQL
     {
         return $this->where(array($column => $value), $table, true, '>=');
     }
 
-    public function group(string|array $groupBy) : string
+    public function group(string|array $groupBy) : SQL
     {
         $cols = (is_array($groupBy)) ? $groupBy : array($groupBy);
-        return 'GROUP BY '.$this->columnEscape($cols);
+        $ret = 'GROUP BY '.$this->db->columnEscape($cols);
+        $this->query .= $ret;
+        return $this;
     }
 
-    private function orderPart(string $sort, ?string $maybeDesc = null) : string
-    {
-        $sort = $this->columnEscape($sort);
-        return ($maybeDesc) ? $sort.' ' : $sort.' DESC';
-    }
-
-    public function order(string $sort, ?string $maybeDesc = null, ...$more) : string
+    public function order(string $sort, ?string $maybeDesc = null, ...$more) : SQL
     {
         $ret = ' ORDER BY '.$this->orderPart($sort, $maybeDesc);
         $moreSorts = [];
@@ -152,15 +238,20 @@ class SQL
             $maybeDesc = array_key_exists($descColumn, $more) ? $more[$descColumn] : '';
             $ret .= $this->orderPart($v, $maybeDesc);
         }
-        return $ret;
+        $this->query .= $ret;
+        return $this;
     }
 
-    public function limit(int $per_page, int $page = 1) : string
+    public function limit(int $per_page, int $page = 1) : SQL
     {
         $start = strval($per_page * ($page - 1));
         $count = strval($per_page);
-        return 'LIMIT '.$start.', '.$count.' ';
+        $ret = 'LIMIT '.$start.', '.$count.' ';
+        $this->query .= $ret;
+        return $this;
     }
+
+    /************************************************************************/
 
     public function value($query) : mixed
     {
@@ -206,43 +297,7 @@ class SQL
         return $ret;
     }
 
-    private function deleteSQL(string $table, array $conditions = []) : string
-    {
-        $table = $this->tableEscape($table);
-        return 'DELETE FROM '.$table.$this->where($conditions);
-    }
-
-    private function insertSQL(string $table, array $records) : string
-    {
-        $table = $this->tableEscape($table);
-        $columns = array_keys(reset($records));
-        $line = 'INSERT INTO '.$table.' ('.$this->columnEscape($columns).') VALUES ';
-        $first = true;
-        foreach ($records as $record) {
-            if (!$first) {
-                $line .= ', ';
-            }
-            $first = false;
-            $line .= "('".implode("', '", $this->escape($record))."')";
-        }
-        return $line;
-    }
-
-    private function transactionForLines(array $lines, bool $returnLastInsertId = true) : int
-    {
-        $this->db->begin();
-        foreach ($lines as $line) {
-            $result = $this->db->query($line);
-        }
-        if ($returnLastInsertId) {
-            $ret = $this->db->insertId();
-        }
-        $this->db->commit();
-        if (!$returnLastInsertId) {
-            $ret = $this->db->affectedRows($result);
-        }
-        return $ret;
-    }
+    /************************************************************************/
 
     public function insert(string $table, array $records) : int
     {
@@ -258,7 +313,7 @@ class SQL
     {
         if (count($newData))
         {
-            $table = $this->tableEscape($table);
+            $table = $this->db->tableEscape($table);
             $keyVal = $this->fieldsValues($newData);
             $where = $this->where($conditions);
             $query = 'UPDATE '.$table.' SET '.$keyVal.$where;
@@ -279,8 +334,8 @@ class SQL
 
     public function setBlob(string $table, string $column, string $blob, array $conditions = []) : int
     {
-        $table = $this->tableEscape($table);
-        $column = $this->columnEscape($column);
+        $table = $this->db->tableEscape($table);
+        $column = $this->db->columnEscape($column);
         $where = $this->where($conditions);
         $query = 'UPDATE '.$table.' SET '.$column.' = ? '.$where;
         $result = $this->db->setBlob($query, $blob);
