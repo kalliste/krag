@@ -20,7 +20,7 @@ class LogEntry
         public string $message,
         public int $time,
         public array $data = [],
-        public string $module = '',
+        public ?string $module = null,
     ) {}
 
 }
