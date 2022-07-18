@@ -10,6 +10,19 @@ enum LogLevel: int
     case WARN = 40;
     case ERROR = 50;
     case FATAL = 60;
+
+    public function string()
+    {
+        return match($this)
+        {
+            LogLevel::TRACE => 'trace',
+            LogLevel::DEBUG => 'debug',
+            LogLevel::INFO => 'info',
+            LogLevel::ERROR => 'error',
+            LogLevel::WARN => 'warn',
+            LogLevel::FATAL => 'fatal',
+        };
+    }
 }
 
 class LogEntry
@@ -47,7 +60,7 @@ class Log
         }
         if (is_object($this->leader))
         {
-            [$this->leader, $level]($message, $data, $module);
+            [$this->leader, $level->string()]($message, $data, $module);
         }
         else
         {
