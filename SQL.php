@@ -115,7 +115,7 @@ class SQL
     {
         $result = $this->db->query($query);
         $ret = array();
-        while ($row = $this->db-fetchRow($result)) {
+        while ($row = $this->db->fetchRow($result)) {
             $ret[$row[0]] = $row[1];
         }
         return $ret;
