@@ -76,7 +76,6 @@ class SQL
         return "LIMIT $start, $count ";
     }
 
-
     public function value($query) : mixed
     {
         $result = $this->db->query($query);
