@@ -137,13 +137,13 @@ class DB
         return str_replace(['`', '"', "'", '|', ';'], '', $toEscape);
     }
 
-    public function updateBlob(string $table, string $column, string $blob, string $strCondtiions = '') : object
+    public function updateBlob(string $table, string $column, string $blob, string $where = '') : object
     {
         $cl = $this->columnQuoteCharLeft;
         $cr = $this->columnQuoteCharRight;
         $table = $this->tableEscape($table);
         $column = $this->columnEscape($column);
-        $statement = $this->conn->prepare("UPDATE ".$cl.$table.$cr." SET ".$cl.$column.$cr." = ? ".$strCondtiions);
+        $statement = $this->conn->prepare("UPDATE ".$cl.$table.$cr." SET ".$cl.$column.$cr." = ? ".$where);
         $statement->bindParam(1, $blob, \PDO::PARAM_LOB);
         $this->begin();
         $statement->execute();
