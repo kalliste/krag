@@ -22,19 +22,19 @@ class SQL
         return $this->db->tableEscape($toEscape);
     }
 
-    public function fieldEqualsValue(string $key, $value, ?string $table = null) : string
+    public function fieldValue(string $key, $value, ?string $table = null, $operator = '=') : string
     {
         $key = $this->columnEscape($key);
         $value = $this->escape($value);
         if ($table)
         {
             $table = $this->tableEscape($table);
-            return $table.'.'.$key."='".$value."'";
+            return $table.'.'.$key.$operator."'".$value."'";
         }
-        return $key."='".$value."'";
+        return $key.$operator."'".$value."'";
     }
 
-    public function fieldsEqualValues(array $conditions, ?string $table = null) : string
+    public function fieldsValues(array $conditions, ?string $table = null, $operator = '=') : string
     {
         $ret = '';
         $first = true;
@@ -45,20 +45,45 @@ class SQL
                 $ret .= ', ';
             }
             $first = false;
-            $ret .= $this->fieldEqualsValue($k, $v, $table);
+            $ret .= $this->fieldValue($k, $v, $table);
         }
         return $ret;
     }
 
-    public function where(array $conditions = [], ?string $table = null, bool $additional = false) : string
+    public function where(array $conditions = [], ?string $table = null, bool $additional = false, $operator = '') : string
     {
         $where = ($additional) ? ' ' : ' WHERE (1=1) ';
         if (count($conditions))
         {
-            $keyEqualsVal = $this->fieldsEqualValues($conditions, $table);
-            $where .= ' AND ('.implode(') AND (', $keyEqualsVal).') ';
+            $keyVal = $this->fieldsValues($conditions, $table, $operator);
+            $where .= ' AND ('.implode(') AND (', $keyVal).') ';
         }
         return $where;
+    }
+
+    public function eq(string $column, mixed $value, ?string table = null) : string
+    {
+        return $this->where(array($column => $value), $table, true);
+    }
+
+    public function lt(string $column, mixed $value, ?string table = null) : string
+    {
+        return $this->where(array($column => $value), $table, true, '<');
+    }
+
+    public function lte(string $column, mixed $value, ?string table = null) : string
+    {
+        return $this->where(array($column => $value), $table, true, '<=');
+    }
+
+    public function gt(string $column, mixed $value, ?string table = null) : string
+    {
+        return $this->where(array($column => $value), $table, true, '>');
+    }
+
+    public function gte(string $column, mixed $value, ?string table = null) : string
+    {
+        return $this->where(array($column => $value), $table, true, '>=');
     }
 
     public function group(string|array $groupBy) : string
@@ -70,7 +95,7 @@ class SQL
     private function orderPart(string $sort, ?string $maybeDesc = null) : string
     {
         $sort = $this->columnEscape($sort);
-        return ($maybeDesc) ? $sort.' ' : $sort.' Desc';
+        return ($maybeDesc) ? $sort.' ' : $sort.' DESC';
     }
 
     public function order(string $sort, ?string $maybeDesc = null, ...$more) : string
@@ -183,13 +208,6 @@ class SQL
         }
         return $ret;
     }
-
-    public function updateBlob(string $table, string $column, string $blob, array $conditions = []) : int
-    {
-        $result = $this->db->updateBlob($table, $column, $blob, $this->where($conditions));
-        return $this-db>affectedRows($result);
-    }
-
     public function insert(string $table, array $records) : int
     {
         if (count($records))
@@ -205,13 +223,19 @@ class SQL
         if (count($newData))
         {
             $table = $this->tableEscape($table);
-            $keyEqualsVal = $this->fieldsEqualValues($newData);
+            $keyVal = $this->fieldsValues($newData);
             $where = $this->where($conditions);
-            $query = 'UPDATE '.$table.' SET '.$keyEqualsVal.$where;
+            $query = 'UPDATE '.$table.' SET '.$keyVal.$where;
             $result = $this->db->query($query);
             return $this->db->affectedRows($result);
         }
         return 0;
+    }
+
+    public function updateBlob(string $table, string $column, string $blob, array $conditions = []) : int
+    {
+        $result = $this->db->updateBlob($table, $column, $blob, $this->where($conditions));
+        return $this-db>affectedRows($result);
     }
 
     public function replace(string $table, array $conditions, $records) : int
