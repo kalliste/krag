@@ -138,7 +138,7 @@ class SQL
             if ($i > 1) {
                 $line .= ",";
             }
-            $line .= "('".implode("', '", $this->db->arrayEscape($record))."')";
+            $line .= "('".implode("', '", $this->db->escape($record))."')";
         }
         return $line;
     }
@@ -180,7 +180,7 @@ class SQL
         if (count($newData))
         {
             $c = $this->db->columnQuoteChar;
-            $escaped = $this->db->arrayEscape($newData);
+            $escaped = $this->db->escape($newData);
             $keyEqualsVal = array_map([$this, 'columnKeyEqualsValue'], $escaped);
             $where = $this->where($conditions);
             $query = "UPDATE ".$table." SET ".implode(", ", $keyEqualsVal).$where;

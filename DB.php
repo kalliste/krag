@@ -120,14 +120,13 @@ class DB
         return $result->rowCount();
     }
 
-    public function escape(string $str)
+    public function escape(string|array $toEscape)
     {
+        if (is_array($toEscape))
+        {
+            return array_map([$this, 'escape'], $toEscape);
+        }
         return substr($this->conn->quote($str), 1, -1);
-    }
-
-    public function arrayEscape(array $arr)
-    {
-        return array_map([$this, 'escape'], $arr);
     }
 
 }
