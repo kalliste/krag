@@ -73,9 +73,9 @@ class DB
             $this->log->debug($query);
         }
         $result = $this->conn->query($query);
-        if (is_object($return))
+        if (is_object($result))
         {
-            $this->logAnyError($return);
+            $this->logAnyError($result);
         }
         else
         {
