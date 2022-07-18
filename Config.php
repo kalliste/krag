@@ -13,7 +13,7 @@ class Config implements \IteratorAggregate
             include('config.php');
             $fileSettings = get_defined_vars();
             unset($fileSettings['settings']);
-            $this->settings = array_merge($fileSettings, $settings);
+            $this->settings = array_merge($settings, $fileSettings);
         }
     }
 
