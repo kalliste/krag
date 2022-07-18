@@ -8,7 +8,6 @@ class App
     protected array $controllers = [];
     protected array $methodTree = [];
     protected array $globalFetchers = [];
-    protected array $request = [];
 
     public function __construct(
         protected Views $views,
@@ -106,12 +105,12 @@ class App
         return call_user_func_array([$controller, $methodName], $pass);
     }
 
-    protected function processGlobalFetchers() : array
+    protected function processGlobalFetchers($request) : array
     {
         $ret = [];
         foreach ($this->globalFetchers as $name => $method)
         {
-            $ret[$name] = call_user_func($method);
+            $ret[$name] = call_user_func_array($method, [$request]);
         }
         return $ret;
     }
@@ -123,12 +122,11 @@ class App
 
     public function run(array $request)
     {
-        $this->request = $request;
         $this->preFlight();
         $this->registerControllers();
         [$controller, $controllerName, $methodName, $arguments] = $this->findHandler($request);
         $methodData = $this->callHandler($controller, $methodName, $arguments, $request);
-        $allData = array_merge($this->processGlobalFetchers(), $methodData);
+        $allData = array_merge($this->processGlobalFetchers($request), $methodData);
         $this->views->render($controllerName, $methodName, $allData);
         $this->cleanup();
     }
