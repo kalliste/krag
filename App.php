@@ -31,7 +31,7 @@ class App
                 $methods[$methodName] = [];
                 foreach ($rmethod->getParameters() as $param)
                 {
-                    $methods[$methodName][] = $param->getName();
+                    $methods[$methodName][$param->getName()] = $param;
                 }
             }
         }
@@ -103,9 +103,9 @@ class App
     protected function callHandler(object $controller, string $methodName, array $arguments, array $request) : array
     {
         $pass = [];
-        foreach ($arguments as $argument)
+        foreach (array_keys($arguments) as $argumentName)
         {
-            $pass[] = (array_key_exists($argument, $request)) ? $request[$argument] : '';
+            $pass[] = (array_key_exists($argumentName, $request)) ? $request[$argumentName] : '';
         }
         return call_user_func_array([$controller, $methodName], $pass);
     }
