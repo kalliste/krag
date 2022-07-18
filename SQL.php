@@ -61,27 +61,27 @@ class SQL
         return $where;
     }
 
-    public function eq(string $column, mixed $value, ?string table = null) : string
+    public function eq(string $column, mixed $value, ?string $table = null) : string
     {
         return $this->where(array($column => $value), $table, true);
     }
 
-    public function lt(string $column, mixed $value, ?string table = null) : string
+    public function lt(string $column, mixed $value, ?string $table = null) : string
     {
         return $this->where(array($column => $value), $table, true, '<');
     }
 
-    public function lte(string $column, mixed $value, ?string table = null) : string
+    public function lte(string $column, mixed $value, ?string $table = null) : string
     {
         return $this->where(array($column => $value), $table, true, '<=');
     }
 
-    public function gt(string $column, mixed $value, ?string table = null) : string
+    public function gt(string $column, mixed $value, ?string $table = null) : string
     {
         return $this->where(array($column => $value), $table, true, '>');
     }
 
-    public function gte(string $column, mixed $value, ?string table = null) : string
+    public function gte(string $column, mixed $value, ?string $table = null) : string
     {
         return $this->where(array($column => $value), $table, true, '>=');
     }
@@ -232,12 +232,6 @@ class SQL
         return 0;
     }
 
-    public function updateBlob(string $table, string $column, string $blob, array $conditions = []) : int
-    {
-        $result = $this->db->updateBlob($table, $column, $blob, $this->where($conditions));
-        return $this-db>affectedRows($result);
-    }
-
     public function replace(string $table, array $conditions, $records) : int
     {
         $queries = [
@@ -245,6 +239,16 @@ class SQL
             $this->insertSQL($table, $records)
         ];
         return $this->transactionForLines($queries, false);
+    }
+
+    public function setBlob(string $table, string $column, string $blob, array $conditions = []) : int
+    {
+        $table = $this->tableEscape($table);
+        $column = $this->columnEscape($column);
+        $where = $this->where($conditions);
+        $query = 'UPDATE '.$table.' SET '.$column.' = ? '.$where;
+        $result = $this->db->setBlob($query, $blob);
+        return $this-db>affectedRows($result);
     }
 
 }
