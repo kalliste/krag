@@ -123,7 +123,14 @@ class DB
         return substr($this->conn->quote($str), 1, -1);
     }
 
-    public function columnEscape(string|array $toEscape) : string
+    public function tableEscape(string $toEscape) : string
+    {
+        $cl = $this->columnQuoteCharLeft;
+        $cr = $this->columnQuoteCharRight;
+        return $cl.str_replace(['`', '"', "'", '|', ';'], '', $toEscape).$cr;
+    }
+
+    public function columnEscape(string|array $toEscape, ?string $table = null) : string
     {
         $cl = $this->columnQuoteCharLeft;
         $cr = $this->columnQuoteCharRight;
@@ -131,14 +138,9 @@ class DB
         {
             return implode(', ', array_map([$this, 'columnEscape'], $toEscape));
         }
-        return $cl.str_replace(['`', '"', "'", '|', ';'], '', $toEscape).$cr;
-    }
-
-    public function tableEscape(string $toEscape) : string
-    {
-        $cl = $this->columnQuoteCharLeft;
-        $cr = $this->columnQuoteCharRight;
-        return $cl.str_replace(['`', '"', "'", '|', ';'], '', $toEscape).$cr;
+        $table = (is_string($table)) ? $this->tableEscape($table).'.' : '';
+        $escaped = str_replace(['`', '"', "'", '|', ';'], '', $toEscape);
+        return $cl.$table.$escaped.$cr;
     }
 
     public function setBlob(string $query, string $blob) : object

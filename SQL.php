@@ -12,9 +12,9 @@ class SQL
         return $this->db->escape($toEscape);
     }
 
-    public function columnEscape(string|array $toEscape) : string
+    public function columnEscape(string|array $toEscape, ?string $table = null) : string
     {
-        return $this->db->columnEscape($toEscape);
+        return $this->db->columnEscape($toEscape, $table);
     }
 
     public function tableEscape(string $toEscape) : string
@@ -46,6 +46,41 @@ class SQL
             }
             $first = false;
             $ret .= $this->fieldValue($k, $v, $table);
+        }
+        return $ret;
+    }
+
+    public function select(string|array $fields = [], ?string $table = null, bool $additional = false)
+    {
+        $ret = ($additional) ? ', ' : 'SELECT ';
+        if (is_string($fields))
+        {
+            $fields = [$fields];
+        }
+        if (count($fields))
+        {
+            $ret .= $this->columnEscape($fields, $table);
+        }
+        return $ret;
+    }
+
+    public function selectAliased(string|array $fields = [], ?string $table = null, bool $additional = false)
+    {
+        $ret = ($additional) ? ', ' : 'SELECT ';
+        if (is_string($fields))
+        {
+            $fields = [$fields];
+        }
+        if (count($fields))
+        {
+            $fields = array_map(function($field) { preg_replace('/[^A-Za-z0-9_]/', '', $field); });
+            $first = true;
+            foreach ($fields as $field => $alias)
+            {
+                $ret .= $first ? '' : ', ';
+                $ret .= $this->columnEscape($field, $table);
+                $ret .= ' AS '.$alias;
+            }
         }
         return $ret;
     }
@@ -208,6 +243,7 @@ class SQL
         }
         return $ret;
     }
+
     public function insert(string $table, array $records) : int
     {
         if (count($records))
