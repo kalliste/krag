@@ -106,7 +106,7 @@ class SQL
     public function list(string $query) : array
     {
         $result = $this->db->query($query);
-        $ret = array();
+        $ret = [];
         while ($row = $this->db->fetchRow($result))
         {
             $ret[] = $row[0];
@@ -123,7 +123,7 @@ class SQL
     function assocList(string $query) : array
     {
         $result = $this->db->query($query);
-        $ret = array();
+        $ret = [];
         while ($row = $this->db-fetchAssoc($result)) {
             $ret[] = $row;
         }
@@ -133,7 +133,7 @@ class SQL
     function map(string $query) : array
     {
         $result = $this->db->query($query);
-        $ret = array();
+        $ret = [];
         while ($row = $this->db->fetchRow($result)) {
             $ret[$row[0]] = $row[1];
         }
