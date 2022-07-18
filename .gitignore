@@ -1,5 +1,4 @@
 .*.swp
-config.php
 /cache/
 /vendor/
 .rg.rc
