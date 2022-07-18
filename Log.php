@@ -45,26 +45,30 @@ class Log
     public function __construct(
         public ?string $module = null,
         public ?Log $leader = null,
+        public LogLevel $minLevel = LogLevel::TRACE,
     ) {}
 
     public function makeFollower(string $module): Log
     {
-        return new static($module, $this);
+        return new static($module, $this, $this->minLevel);
     }
 
     private function handleLog(LogLevel $level, string $message, array $data = [], ?string $module = null)
     {
-        if (!$module)
+        if ($level->value >= $this->minLevel->value)
         {
-            $module = $this->module;
-        }
-        if (is_object($this->leader))
-        {
-            [$this->leader, $level->string()]($message, $data, $module);
-        }
-        else
-        {
-            $this->messages[] = new LogEntry($level, $message, time(), $data, $module);
+            if (!$module)
+            {
+                $module = $this->module;
+            }
+            if (is_object($this->leader))
+            {
+                [$this->leader, $level->string()]($message, $data, $module);
+            }
+            else
+            {
+                $this->messages[] = new LogEntry($level, $message, time(), $data, $module);
+            }
         }
     }
 
