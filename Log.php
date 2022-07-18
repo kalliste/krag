@@ -56,7 +56,7 @@ class Log
         return new static($module, $this, $this->minLevel);
     }
 
-    private function handleLog(LogLevel $level, string $message, array $data = [], ?string $module = null)
+    protected function handleLog(LogLevel $level, string $message, array $data = [], ?string $module = null)
     {
         if ($level->value >= $this->minLevel->value)
         {
