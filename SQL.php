@@ -9,24 +9,35 @@ class SQL
         private DB $db,
     ) {}
 
-    public function columnKeyEqualsValue(array $item, string $key, string $table = '') : string
+    public function fieldEqualsValue(string $key, $value, ?string $table = null) : string
     {
         $c = $this->db->columnQuoteChar;
         if ($table)
         {
-            return $c.$table.$c.".".$c.$key.$c."='".$item."'";
+            return $c.$table.$c.".".$c.$key.$c."='".$value."'";
         }
-        return $c.$key.$c."='".$item."'";
+        return $c.$key.$c."='".$value."'";
     }
 
-    public function where(array $conditions = [], string $table = '') : string
+    public function multipleFieldsEqualValues(array $conditions, ?string $table = null) : string
     {
+        $ret = '';
+        foreach ($conditions as $k => $v)
+        {
+            $ret .= $this->fieldEqualsValue($k, $v, $table);
+        }
+        return $ret;
+    }
+
+    public function where(array $conditions = [], ?string $table = null, bool $additional = false) : string
+    {
+        $where = ($additional) ? ' ' : ' WHERE (1=1) ';
         if (count($conditions))
         {
-            $keyEqualsVal = array_map([$this, 'columnKeyEqualsValue'], $conditions);
-            return " WHERE (1=1) AND (".implode(") AND (", $keyEqualsVal).") ";
+            $keyEqualsVal = $this->multipleFieldsEqualValues($conditions, $table);
+            $where .= " AND (".implode(") AND (", $keyEqualsVal).") ";
         }
-        return " WHERE (1=1) ";
+        return $where;
     }
 
     public function group(string|array $groupBy) : string
@@ -180,7 +191,7 @@ class SQL
         {
             $c = $this->db->columnQuoteChar;
             $escaped = $this->db->escape($newData);
-            $keyEqualsVal = array_map([$this, 'columnKeyEqualsValue'], $escaped);
+            $keyEqualsVal = $this->multipleFieldsEqualValues($conditions);
             $where = $this->where($conditions);
             $query = "UPDATE ".$table." SET ".implode(", ", $keyEqualsVal).$where;
             $result = $this->db->query($query);
