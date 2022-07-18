@@ -49,7 +49,7 @@ class DB
         return $this->conn->commit();
     }
 
-    public function rollback()
+    public function rollBack()
     {
         return $this->conn->rollBack();
     }
