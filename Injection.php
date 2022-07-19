@@ -5,31 +5,22 @@ namespace Krag;
 class Injection
 {
 
-    private function isAssoc(array $arr) : bool
-    {
-        if ([] === $arr)
-        {
-            return false;
-        }
-        return (range(0, count($arr) - 1) !== array_keys($arr));
-    }
-
     private function matchParamToArguments(int $position, string $name, array $arguments) : mixed
     {
         if (count($arguments))
         {
-            if ($this->isAssoc($arguments))
-            {
-                if (array_key_exists($name, $arguments))
-                {
-                    return $arguments[$name];
-                }
-            }
-            else
+            if (array_is_list($arguments))
             {
                 if ($position < count($arguments))
                 {
                     return $arguments[$position];
+                }
+            }
+            else
+            {
+                if (array_key_exists($name, $arguments))
+                {
+                    return $arguments[$name];
                 }
             }
         }
