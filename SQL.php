@@ -6,6 +6,8 @@ class SQL
 {
 
     private string $query = '';
+    private bool $haveSelect = false;
+    private bool $haveWhere = false;
 
     public function __construct(private DB $db) {}
 
@@ -85,9 +87,13 @@ class SQL
 
     /************************************************************************/
 
-    public function select(string|array $fields = [], ?string $table = null, bool $additional = false) : SQL
+    public function select(string|array $fields = [], ?string $table = null) : SQL
     {
-        $ret = ($additional) ? ', ' : 'SELECT ';
+        if (!$this->haveSelect)
+        {
+            $ret .= 'SELECT ';
+            $this->haveSelect = true;
+        }
         if (is_string($fields))
         {
             $fields = [$fields];
@@ -100,9 +106,13 @@ class SQL
         return $this;
     }
 
-    public function selectAliased(string|array $fields = [], ?string $table = null, bool $additional = false) : SQL
+    public function selectAliased(string|array $fields = [], ?string $table = null) : SQL
     {
-        $ret = ($additional) ? ', ' : 'SELECT ';
+        if (!$this->haveSelect)
+        {
+            $ret .= 'SELECT ';
+            $this->haveSelect = true;
+        }
         if (is_string($fields))
         {
             $fields = [$fields];
@@ -174,41 +184,50 @@ class SQL
         return $this;
     }
 
-    public function where(array $conditions = [], ?string $table = null, bool $additional = false, $operator = '') : SQL
+    public function where(array $conditions = [], ?string $table = null, $operator = '') : SQL
     {
-        $ret = ($additional) ? ' ' : ' WHERE (1=1) ';
         if (count($conditions))
         {
+            if ($this->haveWhere)
+            {
+                $ret .= ' AND ';
+            }
+            else
+            {
+                $ret .= ' WHERE ';
+                $this->haveWhere = true;
+            }
             $keyVal = $this->fieldsValues($conditions, $table, $operator);
-            $ret .= ' AND ('.implode(') AND (', $keyVal).') ';
+            $ret .= ' ('.implode(') AND (', $keyVal).') ';
+            $this->query .= $ret;
+
         }
-        $this->query .= $ret;
         return $this;
     }
 
     public function eq(string $column, mixed $value, ?string $table = null) : SQL
     {
-        return $this->where(array($column => $value), $table, true);
+        return $this->where(array($column => $value), $table);
     }
 
     public function lt(string $column, mixed $value, ?string $table = null) : SQL
     {
-        return $this->where(array($column => $value), $table, true, '<');
+        return $this->where(array($column => $value), $table, '<');
     }
 
     public function lte(string $column, mixed $value, ?string $table = null) : SQL
     {
-        return $this->where(array($column => $value), $table, true, '<=');
+        return $this->where(array($column => $value), $table, '<=');
     }
 
     public function gt(string $column, mixed $value, ?string $table = null) : SQL
     {
-        return $this->where(array($column => $value), $table, true, '>');
+        return $this->where(array($column => $value), $table, '>');
     }
 
     public function gte(string $column, mixed $value, ?string $table = null) : SQL
     {
-        return $this->where(array($column => $value), $table, true, '>=');
+        return $this->where(array($column => $value), $table, '>=');
     }
 
     public function group(string|array $groupBy) : SQL
