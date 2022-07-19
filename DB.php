@@ -123,11 +123,16 @@ class DB
         return substr($this->conn->quote($str), 1, -1);
     }
 
+    private function noSpecials(string toEscape) : string
+    {
+        return preg_replace('/[^A-Za-z0-9_]/', '', $str);
+    }
+
     public function tableEscape(string $toEscape) : string
     {
         $cl = $this->columnQuoteCharLeft;
         $cr = $this->columnQuoteCharRight;
-        return $cl.str_replace(['`', '"', "'", '|', ';'], '', $toEscape).$cr;
+        return $cl.$this->noSpecials($toEscape).$cr;
     }
 
     public function columnEscape(string|array $toEscape, ?string $table = null) : string
@@ -139,13 +144,13 @@ class DB
             return implode(', ', array_map([$this, 'columnEscape'], $toEscape));
         }
         $table = (is_string($table)) ? $this->tableEscape($table).'.' : '';
-        $escaped = str_replace(['`', '"', "'", '|', ';'], '', $toEscape);
+        $escaped = $this->nosSpecials($toEscape);
         return $cl.$table.$escaped.$cr;
     }
 
     private function aliasEscape(string $str) : string
     {
-        return preg_replace('/[^A-Za-z0-9_]/', '', $str);
+        return $this->noSpecials($toEscape);
     }
 
     public function setBlob(string $query, string $blob) : object
