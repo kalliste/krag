@@ -290,13 +290,13 @@ class SQL
         return $ret;
     }
 
-    function assoc(string $query) : array
+    public function assoc(string $query) : array
     {
         $result = $this->db->query($query);
         return $this->db->fetchAssoc($result);
     }
 
-    function assocList(string $query) : array
+    public function assocList(string $query) : array
     {
         $result = $this->db->query($query);
         $ret = [];
@@ -306,7 +306,7 @@ class SQL
         return $ret;
     }
 
-    function map(string $query) : array
+    public function map(string $query) : array
     {
         $result = $this->db->query($query);
         $ret = [];
