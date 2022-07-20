@@ -25,7 +25,19 @@ enum LogLevel: int
     }
 }
 
-class ResponseInfo
+class Request
+{
+    public function __construct(
+        array $request = [],
+        string $uri = '',
+        string $serverName = '',
+        array $get = [],
+        array $post = [],
+        array $cookies = [],
+    ) {}
+}
+
+class Response
 {
     public function __construct(
         public array $data = [],
@@ -40,7 +52,7 @@ interface AppInterface
 {
     public function registerController(object $controller, ?string $name = null);
     public function addGlobalFetcher(string $name, callable $method);
-    public function run(array $request);
+    public function run(?Request $request = null);
 }
 
 interface DBInterface
@@ -91,10 +103,10 @@ interface StaticModelInterface
     public static function replace(array $conditions, array $records) : int;
 }
 
-interface ResponseInterface
+interface ResultInterface
 {
-    public function redirect(callable $method, array $data = [], ?int $responseCode = null, $headers = []) : ResponseInterface;
-    public function getResponseInfo() : ResponseInfo;
+    public function redirect(callable $method, array $data = [], ?int $responseCode = null, $headers = []) : ResultInterface;
+    public function getResponse() : Response;
 }
 
 interface SQLInterface

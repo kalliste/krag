@@ -12,31 +12,7 @@ class App implements AppInterface
         protected Views $views,
         protected string $controllerPath = 'controllers',
         protected array $globalFetchers = [],
-        protected bool $registerControllersOnRun = true,
     ) {}
-
-    protected function isHiddenControllerMethod($class, $methodName) : bool {
-        return (substr($methodName, 0, 1) == '_');
-    }
-
-    protected function mapMethods(object $object) : array
-    {
-        $class = get_class($object);
-        $methods = [];
-        foreach (get_class_methods($object) as $methodName)
-        {
-            if (!$this->isHiddenControllerMethod($class, $methodName))
-            {
-                $rmethod = new \ReflectionMethod($class, $methodName);
-                $methods[$methodName] = [];
-                foreach ($rmethod->getParameters() as $param)
-                {
-                    $methods[$methodName][$param->getName()] = $param;
-                }
-            }
-        }
-        return $methods;
-    }
 
     protected function preFlight()
     {
@@ -46,65 +22,40 @@ class App implements AppInterface
     {
     }
 
-    protected function index() : array
+    protected function mapMethods(object $object) : array
     {
-        return [];
-    }
-
-    protected function notFound() : array
-    {
-        return [];
-    }
-
-    public function registerController(object $controller, ?string $name = null)
-    {
-        $name = (is_string($name)) ? $name : get_class($controller);
-        $this->controllers[$name] = $controller;
-        $this->methodTree[$name] = $this->mapMethods($controller);
-    }
-
-    /**
-     * Default controller loader
-     *
-     * @param string $path A directory containing files containing controller classes of the same name
-     *
-     */
-    protected function registerControllers()
-    {
-        foreach (scandir($this->controllerPath) as $fileName)
+        $class = get_class($object);
+        $methods = [];
+        foreach (get_class_methods($object) as $methodName)
         {
-            $parts = explode('.', $fileName);
-            if (end($parts) == 'php')
+            $rmethod = new \ReflectionMethod($class, $methodName);
+            $methods[$methodName] = [];
+            foreach ($rmethod->getParameters() as $param)
             {
-                require_once($this->controllerPath.\DIRECTORY_SEPARATOR.$fileName);
-                $class = reset($parts);
-                $this->registerController(new $class(), $class);
+                $methods[$methodName][$param->getName()] = $param;
             }
         }
+        return $methods;
     }
 
-    protected function findHandler(array $request) : array
+    protected function findHandler() : array
     {
-        $action = array_key_exists('action', $request) ? $request['action'] : 'index';
+        $action = $request->request['action'] ?? 'index';
         foreach ($this->methodTree as $controllerName => $methods)
         {
             if (array_key_exists($action, $methods))
             {
-                return [$this->controllers[$controllerName], $controllerName, $action, $methods[$action]];
+                $handler = [$this->controllers[$controllerName], $action];
+                return [$controllerName, $action, $handler, $methods[$action]];
             }
         }
-        $action = ($action == 'index') ? 'index' : 'notFound';
-        return [$this, 'App', $action, []];
+        return [function() { return []; }, ($action == 'index') ? 'index' : 'notFound', []];
     }
 
-    protected function callHandler(object $controller, string $methodName, array $arguments, array $request) : array
+    protected function callHandler(callable $handler, array $arguments, ?RequestInfo $request) : mixed
     {
-        $pass = [];
-        foreach (array_keys($arguments) as $argumentName)
-        {
-            $pass[] = (array_key_exists($argumentName, $request)) ? $request[$argumentName] : '';
-        }
-        return call_user_func_array([$controller, $methodName], $pass);
+        $pass = array_map(function($argument) { return $request->request[$argumentName] ?? null; }, $arguments);
+        return call_user_func_array($handler, $pass);
     }
 
     protected function processGlobalFetchers($request) : array
@@ -122,15 +73,25 @@ class App implements AppInterface
         $this->globalFetchers[$name] = $method;
     }
 
-    public function run(array $request)
-    {
-        $this->preFlight();
-        if ($this->registerControllersOnRun)
+    public function registerController(string|object $controller, ?string $name = null) { if (is_string($controller))
         {
-            $this->registerControllers();
+            if (!class_exists($controller))
+            {
+                require_once($this->controllerPath.\DIRECTORY_SEPARATOR.$controller.'.php');
+            }
+            $controller = new $controller();
         }
-        [$controller, $controllerName, $methodName, $arguments] = $this->findHandler($request);
-        $methodData = $this->callHandler($controller, $methodName, $arguments, $request);
+        $name = (is_string($name)) ? $name : get_class($controller);
+        $this->controllers[$name] = $controller;
+        $this->methodTree[$name] = $this->mapMethods($controller);
+    }
+
+    public function run(?Request $request = null)
+    {
+        $request = $request ?? new Request($_REQUEST, $_SERVER['URI'], $SERVER['SERVER_NAME'], $_GET, $_POST, $_COOKIES);
+        $this->preFlight();
+        [$controllerName, $methodName, $handler, $arguments] = $this->findHandler($request);
+        $methodData = $this->callHandler($handler, $arguments, $request);
         $allData = array_merge($this->processGlobalFetchers($request), $methodData);
         $this->views->render($controllerName, $methodName, $allData);
         $this->cleanup();
