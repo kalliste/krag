@@ -41,12 +41,6 @@ class SQL
         return $ret;
     }
 
-    private function orderPart(string $sort, ?string $maybeDesc = null) : string
-    {
-        $sort = $this->db->columnEscape($sort);
-        return ($maybeDesc) ? $sort.' DESC' : $sort.' ';
-    }
-
     private function deleteSQL(string $table, array $conditions = []) : string
     {
         $table = $this->db->tableEscape($table);
@@ -94,10 +88,7 @@ class SQL
             $ret .= 'SELECT ';
             $this->haveSelect = true;
         }
-        if (is_string($fields))
-        {
-            $fields = [$fields];
-        }
+        $fields = (is_string($fields)) ? [$fields] : $fields;
         if (count($fields))
         {
             $ret .= $this->db->columnEscape($fields, $table).' ';
@@ -113,10 +104,7 @@ class SQL
             $ret .= 'SELECT ';
             $this->haveSelect = true;
         }
-        if (is_string($fields))
-        {
-            $fields = [$fields];
-        }
+        $fields = (is_string($fields)) ? [$fields] : $fields;
         if (count($fields))
         {
             $fields = array_map($this->db->aliasEscape(...), $fields);
@@ -126,6 +114,7 @@ class SQL
                 $ret .= $first ? '' : ', ';
                 $ret .= $this->db->columnEscape($field, $table);
                 $ret .= ' AS '.$alias.' ';
+                $first = false;
             }
         }
         $this->query .= $ret;
@@ -188,6 +177,7 @@ class SQL
     {
         if (count($conditions))
         {
+            $ret = '';
             if ($this->haveWhere)
             {
                 $ret .= ' AND ';
@@ -238,6 +228,12 @@ class SQL
         return $this;
     }
 
+    private function orderPart(string $sort, ?string $maybeDesc = null) : string
+    {
+        $sort = $this->db->columnEscape($sort);
+        return ($maybeDesc) ? $sort.' DESC' : $sort.' ';
+    }
+
     public function order(string $sort, ?string $maybeDesc = null, ...$more) : SQL
     {
         $ret = ' ORDER BY '.$this->orderPart($sort, $maybeDesc);
@@ -255,7 +251,7 @@ class SQL
         {
             $descColumn = 'order'.substr($k, 4);
             $maybeDesc = array_key_exists($descColumn, $more) ? $more[$descColumn] : '';
-            $ret .= $this->orderPart($v, $maybeDesc);
+            $ret .= ', '.$this->orderPart($v, $maybeDesc);
         }
         $this->query .= $ret;
         return $this;
