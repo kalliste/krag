@@ -24,7 +24,7 @@ class Model
 
     public function assoc(int|array $conditions = [], $idColumn = 'id') : array
     {
-        $conditions = (is_int($conditions) ? [$idColumn => $conditions] : $conditions;
+        $conditions = (is_int($conditions)) ? [$idColumn => $conditions] : $conditions;
         return $this->sql()->select()->from($this->table)->where($conditions)->list();
     }
 

@@ -105,7 +105,7 @@ interface SQLInterface
     public function group(string|array $groupBy) : SQLInterface;
     public function order(string $sort, ?string $maybeDesc = null, ...$more) : SQLInterface;
     public function limit(int $per_page, int $page = 1) : SQLInterface;
-    public function orderLimit(array $pagingParams) : SQL
+    public function orderLimit(array $pagingParams) : SQL;
     public function value() : mixed;
     public function list() : array;
     public function assoc() : array;
