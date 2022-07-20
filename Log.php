@@ -12,7 +12,7 @@ enum LogLevel: int
     case ERROR = 50;
     case FATAL = 60;
 
-    public function string()
+    public function toString()
     {
         return match($this)
         {
@@ -63,7 +63,7 @@ class Log
             $module = (is_string($module)) ? $module : $this->module;
             if (is_object($this->leader))
             {
-                [$this->leader, $level->string()]($message, $data, $module);
+                [$this->leader, $level->toString()]($message, $data, $module);
             }
             else
             {
