@@ -105,6 +105,7 @@ interface SQLInterface
     public function group(string|array $groupBy) : SQLInterface;
     public function order(string $sort, ?string $maybeDesc = null, ...$more) : SQLInterface;
     public function limit(int $per_page, int $page = 1) : SQLInterface;
+    public function orderLimit(array $pagingParams) : SQL
     public function value() : mixed;
     public function list() : array;
     public function assoc() : array;
@@ -112,6 +113,7 @@ interface SQLInterface
     public function map() : array;
     public function insert(string $table, array $records) : int;
     public function update(string $table, array $conditions, array $newData) : int;
+    public function delete(string $table, array $conditions = []) : int;
     public function replace(string $table, array $conditions, array $records) : int;
     public function setBlob(string $table, string $column, string $blob, array $conditions = []) : int;
 }

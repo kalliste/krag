@@ -5,6 +5,22 @@ namespace Krag;
 class Injection implements InjectionInterface
 {
 
+    private static ?InjectionInterface $instance = null;
+
+    public function __construct()
+    {
+        Injection::$instance = $this;
+    }
+
+    public static function getInstance() : InjectionInterface
+    {
+        if (is_null(Injection::$instance))
+        {
+            Injection::$instance = new Injection();
+        }
+        return Injection::$instance;
+    }
+
     private function matchParamToArguments(int $position, string $name, array $arguments) : mixed
     {
         if (count($arguments))
@@ -35,7 +51,7 @@ class Injection implements InjectionInterface
         {
             $name = $rParam->getName();
             $arg = $this->matchParamToArguments($i, $name, $arguments);
-            $arg = (is_null($arg)) ? $this->make(strval($param->getType())) : $arg;
+            $arg = $arg ?? $this->make(strval($param->getType()));
             $passArguments[] = $arg;
             $i++;
         }

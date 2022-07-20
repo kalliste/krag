@@ -5,6 +5,7 @@ namespace Krag;
 class SQL implements SQLInterface
 {
 
+    // FIXME: this should be $verb $from $join $where $group $order $limit so we can build out of order
     private string $query = '';
     private bool $haveSelect = false;
     private bool $haveWhere = false;
@@ -123,6 +124,12 @@ class SQL implements SQLInterface
 
     public function from(string $table, ?string $alias = null) : SQL
     {
+        // FIXME: don't use haveSelect here once we split the internal representation
+        if (!$this->haveSelect)
+        {
+            $ret .= 'SELECT ';
+            $this->haveSelect = true;
+        }
         $ret = ' FROM '.$this->db->tableEscape($table);
         $ret .= (is_string($alias)) ? ' AS '.$this->db->aliasEscape($alias) : '';
         $this->query .= $ret;
@@ -266,6 +273,27 @@ class SQL implements SQLInterface
         return $this;
     }
 
+    public function orderLimit(array $pagingParams) : SQL
+    {
+        $ret = $this;
+        if (array_key_exists('sort', $pagingParams))
+        {
+            $sort = $pagingParams['sort'];
+            $maybeDesc = $pagingParams['order'] ?? null;
+            $more = array_filter(function($k)
+            {
+                return (('sort' == substr($k, 0, 4)) && intval(substr($k, 4)) > 0);
+            }, $pagingParams);
+            $ret = $ret->order($sort, $maybeDesc, ...$more);
+        }
+        if (array_key_exists('per_page', $pagingParams))
+        {
+            $page = $pagingParams['page'] ?? 1;
+            $ret = $ret->limit($per_page, $page);
+        }
+        return $ret;
+    }
+
     /************************************************************************/
 
     public function value() : mixed
@@ -314,6 +342,9 @@ class SQL implements SQLInterface
 
     /************************************************************************/
 
+    // FIXME: allow combining these with all applicable SQL part functions above
+    // Probably add a do() function and make the $conditions arguments optional
+
     public function insert(string $table, array $records) : int
     {
         if (count($records))
@@ -336,6 +367,12 @@ class SQL implements SQLInterface
             return $this->db->affectedRows($result);
         }
         return 0;
+    }
+
+    public function delete(string $table, array $conditions = []) : int
+    {
+        $result = $this->db->query($this->deleteSQL($table, $conditions));
+        return $this->db->affectedRows($result);
     }
 
     public function replace(string $table, array $conditions, array $records) : int
