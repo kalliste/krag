@@ -78,6 +78,21 @@ interface LogInterface
     public function fatal(string $message, array $data = [], ?string $module = null) : LogInterface;
 }
 
+interface ModelInterface
+{
+    public static function getInjection(InjectionInterface $injection);
+    public static function setInjection(InjectionInterface $injection);
+    public static function value(string $column, array $conditions = []) : mixed;
+    public static function list(string $column, array $conditions = []) : array;
+    public static function assoc(int|array $conditions = [], $idColumn = 'id') : array;
+    public static function records(array $conditions = [], ?array $pagingParams = null) : array;
+    public static function map(string $keyColumn, string $valueColumn, array $conditions = [], ?array $pagingParams = null) : array;
+    public static function insert(array $records) : int;
+    public static function update(array $conditions, array $newData) : int;
+    public static function delete(array $conditions = []) : int;
+    public static function replace(array $conditions, array $records) : int;
+}
+
 interface ResponseInterface
 {
     public function redirect(callable $method, array $data = [], ?int $responseCode = null, $headers = []) : ResponseInterface;
