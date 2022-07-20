@@ -64,22 +64,6 @@ class SQL implements SQLInterface
         return $line;
     }
 
-    private function transactionForLines(array $lines, bool $returnLastInsertId = true) : int
-    {
-        $this->db->begin();
-        foreach ($lines as $line) {
-            $result = $this->db->query($line);
-        }
-        if ($returnLastInsertId) {
-            $ret = $this->db->insertId();
-        }
-        $this->db->commit();
-        if (!$returnLastInsertId) {
-            $ret = $this->db->affectedRows($result);
-        }
-        return $ret;
-    }
-
     /************************************************************************/
 
     public function select(string|array $fields = [], ?string $table = null) : SQL
@@ -98,6 +82,7 @@ class SQL implements SQLInterface
         return $this;
     }
 
+    // FIXME: Merge with above by using a flag
     public function selectAliased(string|array $fields = [], ?string $table = null) : SQL
     {
         if (!$this->haveSelect)
@@ -121,6 +106,8 @@ class SQL implements SQLInterface
         $this->query .= $ret;
         return $this;
     }
+
+    // FIXME: Add count()
 
     public function from(string $table, ?string $alias = null) : SQL
     {
@@ -377,11 +364,12 @@ class SQL implements SQLInterface
 
     public function replace(string $table, array $conditions, array $records) : int
     {
-        $queries = [
-            $this->deleteSQL($table, $conditions),
-            $this->insertSQL($table, $records)
-        ];
-        return $this->transactionForLines($queries, false);
+        $this->db->begin();
+        $this->db->query($this->deleteSQL($table, $conditions));
+        $result = $this->db->query($this->insertSQL($table, $records));
+        $affected = $this->db->affectedRows($result);
+        $this->db->commit();
+        return $affected;
     }
 
     public function setBlob(string $table, string $column, string $blob, array $conditions = []) : int
