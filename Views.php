@@ -6,7 +6,7 @@ class Views
 {
 
     public function __construct(
-        protected string $templatePath = "templates",
+        protected string $templatePath = 'templates',
         protected array $templateOptions = [ 
             'cache' => false,
             'autoescape' => 'name',
@@ -16,7 +16,7 @@ class Views
 
     protected function templateFile(string $controllerName, string $methodName) : string
     {
-        return $methodName.".html.twig";
+        return $methodName.'.html.twig';
     }
 
     protected function setupTemplateEngine(string $controllerName, string $methodName) : object

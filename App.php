@@ -10,7 +10,7 @@ class App
 
     public function __construct(
         protected Views $views,
-        protected string $controllerPath = "controllers",
+        protected string $controllerPath = 'controllers',
         protected array $globalFetchers = [],
         protected bool $registerControllersOnRun = true,
     ) {}
