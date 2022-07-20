@@ -96,7 +96,7 @@ interface SQLInterface
     public function cross() : SQLInterface;
     public function natural() : SQLInterface;
     public function join(string $table, ?string $alias = null) : SQLInterface;
-    public function where(array $conditions = [], ?string $table = null, $operator = '') : SQLInterface;
+    public function where(array $conditions = [], ?string $table = null, string $operator = '') : SQLInterface;
     public function eq(string $column, mixed $value, ?string $table = null) : SQLInterface;
     public function lt(string $column, mixed $value, ?string $table = null) : SQLInterface;
     public function lte(string $column, mixed $value, ?string $table = null) : SQLInterface;
@@ -105,14 +105,14 @@ interface SQLInterface
     public function group(string|array $groupBy) : SQLInterface;
     public function order(string $sort, ?string $maybeDesc = null, ...$more) : SQLInterface;
     public function limit(int $per_page, int $page = 1) : SQLInterface;
-    public function value($query) : mixed;
-    public function list(string $query) : array;
-    public function assoc(string $query) : array;
-    public function assocList(string $query) : array;
-    public function map(string $query) : array;
+    public function value() : mixed;
+    public function list() : array;
+    public function assoc() : array;
+    public function assocList() : array;
+    public function map() : array;
     public function insert(string $table, array $records) : int;
     public function update(string $table, array $conditions, array $newData) : int;
-    public function replace(string $table, array $conditions, $records) : int;
+    public function replace(string $table, array $conditions, array $records) : int;
     public function setBlob(string $table, string $column, string $blob, array $conditions = []) : int;
 }
 

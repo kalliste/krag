@@ -13,7 +13,7 @@ class SQL implements SQLInterface
 
     /************************************************************************/
 
-    private function fieldValue(string $key, $value, ?string $table = null, $operator = '=') : string
+    private function fieldValue(string $key, $value, ?string $table = null, string $operator = '=') : string
     {
         $key = $this->db->columnEscape($key);
         $value = $this->db->escape($value);
@@ -25,7 +25,7 @@ class SQL implements SQLInterface
         return $key.$operator."'".$value."'";
     }
 
-    private function fieldsValues(array $conditions, ?string $table = null, $operator = '=') : string
+    private function fieldsValues(array $conditions, ?string $table = null, string $operator = '=') : string
     {
         $ret = '';
         $first = true;
@@ -173,7 +173,7 @@ class SQL implements SQLInterface
         return $this;
     }
 
-    public function where(array $conditions = [], ?string $table = null, $operator = '') : SQL
+    public function where(array $conditions = [], ?string $table = null, string $operator = '') : SQL
     {
         if (count($conditions))
         {
@@ -268,16 +268,16 @@ class SQL implements SQLInterface
 
     /************************************************************************/
 
-    public function value($query) : mixed
+    public function value() : mixed
     {
-        $result = $this->db->query($query);
+        $result = $this->db->query($this->query);
         $row = $this->db->fetchRow($result);
         return $row[0];
     }
 
-    public function list(string $query) : array
+    public function list() : array
     {
-        $result = $this->db->query($query);
+        $result = $this->db->query($this->query);
         $ret = [];
         while ($row = $this->db->fetchRow($result))
         {
@@ -286,15 +286,15 @@ class SQL implements SQLInterface
         return $ret;
     }
 
-    public function assoc(string $query) : array
+    public function assoc() : array
     {
-        $result = $this->db->query($query);
+        $result = $this->db->query($this->query);
         return $this->db->fetchAssoc($result);
     }
 
-    public function assocList(string $query) : array
+    public function assocList() : array
     {
-        $result = $this->db->query($query);
+        $result = $this->db->query($this->query);
         $ret = [];
         while ($row = $this->db-fetchAssoc($result)) {
             $ret[] = $row;
@@ -302,9 +302,9 @@ class SQL implements SQLInterface
         return $ret;
     }
 
-    public function map(string $query) : array
+    public function map() : array
     {
-        $result = $this->db->query($query);
+        $result = $this->db->query($this->query);
         $ret = [];
         while ($row = $this->db->fetchRow($result)) {
             $ret[$row[0]] = $row[1];
@@ -338,7 +338,7 @@ class SQL implements SQLInterface
         return 0;
     }
 
-    public function replace(string $table, array $conditions, $records) : int
+    public function replace(string $table, array $conditions, array $records) : int
     {
         $queries = [
             $this->deleteSQL($table, $conditions),
