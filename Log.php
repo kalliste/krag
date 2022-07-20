@@ -2,31 +2,6 @@
 
 namespace Krag;
 
-enum LogLevel: int
-{
-
-    case TRACE = 10;
-    case DEBUG = 20;
-    case INFO = 30;
-    case WARN = 40;
-    case ERROR = 50;
-    case FATAL = 60;
-
-    public function toString()
-    {
-        return match($this)
-        {
-            LogLevel::TRACE => 'trace',
-            LogLevel::DEBUG => 'debug',
-            LogLevel::INFO => 'info',
-            LogLevel::ERROR => 'error',
-            LogLevel::WARN => 'warn',
-            LogLevel::FATAL => 'fatal',
-        };
-    }
-
-}
-
 class LogEntry
 {
 
@@ -40,16 +15,21 @@ class LogEntry
 
 }
 
-class Log
+class Log implements LogInterface, \IteratorAggregate
 {
 
-    public array $messages = [];
+    private array $messages = [];
 
     public function __construct(
         public ?string $module = null,
         public ?Log $leader = null,
         public LogLevel $minLevel = LogLevel::TRACE,
     ) {}
+
+    public function getIterator() : \Traversable
+    {
+        return new \ArrayIterator($this->messages);
+    }
 
     public function makeFollower(string $module): Log
     {

@@ -2,7 +2,7 @@
 
 namespace Krag;
 
-class App
+class App implements AppInterface
 {
 
     protected array $controllers = [];

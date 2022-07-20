@@ -2,7 +2,7 @@
 
 namespace Krag;
 
-class Views
+class Views implements ViewsInterface
 {
 
     public function __construct(

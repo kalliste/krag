@@ -2,7 +2,7 @@
 
 namespace Krag;
 
-class Injection
+class Injection implements InjectionInterface
 {
 
     private function matchParamToArguments(int $position, string $name, array $arguments) : mixed

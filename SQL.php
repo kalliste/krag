@@ -2,7 +2,7 @@
 
 namespace Krag;
 
-class SQL
+class SQL implements SQLInterface
 {
 
     private string $query = '';

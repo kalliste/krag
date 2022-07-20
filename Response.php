@@ -2,13 +2,13 @@
 
 namespace Krag;
 
-class Response
+class Response implements ResponseInterface
 {
 
-    public bool $isRedirect = false;
-    public $redirectMethod;
+    private bool $isRedirect = false;
+    private $redirectMethod;
 
-    public function __construct(public array $data = [], public ?int $responseCode = null, public $headers = []) {}
+    public function __construct(private array $data = [], private ?int $responseCode = null, private $headers = []) {}
 
     public function redirect(callable $method, array $data = [], ?int $responseCode = null, $headers = []) : Response
     {
@@ -21,6 +21,11 @@ class Response
             $this->responseCode = $responseCode;
         }
         return $this;
+    }
+
+    public function getResponseInfo() : ResponseInfo
+    {
+        return new ResponseInfo($this->data, $this->getResponseCode, $this->headers, $this->isRedirect, $this->redirectMethod);
     }
 
 }

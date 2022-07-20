@@ -2,17 +2,17 @@
 
 namespace Krag;
 
-class DB
+class DB implements DBInterface
 {
 
     private \PDO $conn;
-    public string $dbType;
-    public string $columnQuoteCharLeft;
-    public string $columnQuoteCharRight;
-    public string $randomFuncSQL;
+    private string $dbType;
+    private string $columnQuoteCharLeft;
+    private string $columnQuoteCharRight;
+    private string $randomFuncSQL;
 
     public function __construct(
-        public string $dsn,
+        private string $dsn,
         private string $userName,
         private string $password,
         ?Log $log = null,
@@ -44,17 +44,17 @@ class DB
         }
     }
 
-    public function begin()
+    public function begin() : bool
     {
         return $this->conn->beginTransaction();
     }
 
-    public function commit()
+    public function commit() : bool
     {
         return $this->conn->commit();
     }
 
-    public function rollBack()
+    public function rollBack() : bool
     {
         return $this->conn->rollBack();
     }
@@ -99,9 +99,9 @@ class DB
         return $result->fetch(\PDO::FETCH_NUM);
     }
 
-    public function close()
+    public function closeCursor(object $result) : bool
     {
-        $this->conn->closeCursor();
+        return $object->closeCursor();
     }
 
     public function insertId() : int
