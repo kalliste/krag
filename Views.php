@@ -5,36 +5,17 @@ namespace Krag;
 class Views implements ViewsInterface
 {
 
-    public function __construct(
-        protected string $templatePath = 'templates',
-        protected array $templateOptions = [ 
-            'cache' => false,
-            'autoescape' => 'name',
-            'auto_reload' => true,
-        ],
-    ) {}
+    public function __construct(protected string $templatePath = 'templates') {}
 
     protected function templateFile(string $controllerName, string $methodName) : string
     {
-        return $methodName.'.html.twig';
-    }
-
-    protected function setupTemplateEngine(string $controllerName, string $methodName) : object
-    {
-        $loader = new \Twig\Loader\FilesystemLoader($this->templatePath);
-        return new \Twig\Environment($loader, $this->templateOptions);
-    }
-
-    protected function fillTemplate(string $controllerName, string $methodName, array $data) : string
-    {
-        $engine = $this->setupTemplateEngine($controllerName, $methodName);
-        return $engine->render($this->templateFile($controllerName, $methodName), $data);
+        return $this->templatePath.\DIRECTORY_SEPARATOR.$controllerName.\DIRECTORY_SEPARATOR.$methodName.'.html.php';
     }
 
     public function render(string $controllerName, string $methodName, array $data)
     {
-        $content = $this->fillTemplate($controllerName, $methodName, $data);
-        print($content);
+        extract($data);
+        include($this->templateFile($controllerName, $methodName));
     }
 
 }
