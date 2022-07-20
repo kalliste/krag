@@ -60,57 +60,69 @@ class Model
 
 }
 
-trait staticModel
+class StaticModel
 {
 
-    private static function make() : object
+    private static ?InjectionInterface $injection = null;
+
+    public static function getInjection(InjectionInterface $injection)
     {
-        return Injection::getInstance()->make(static::class);
+        return StaticModel::$injection;
     }
 
-    public static function value(string $column, array $conditions = []) : mixed
+    public static function setInjection(InjectionInterface $injection)
     {
-        return static::make()->value();
+        StaticModel::$injection = $injection;
     }
 
-    public static function list(string $column, array $conditions = []) : array
+    private StaticModel function make() : Model
     {
-        return static::make()->list($column, $conditions);
+        return StaticModel::getInjection()->make('Model', ['table' => static::class]);
     }
 
-    public static function assoc(int|array $conditions = [], $idColumn = 'id') : array
+    public StaticModel function value(string $column, array $conditions = []) : mixed
     {
-        return static::make()->assoc($conditions, $idColumn);
+        return StaticModel::make()->value();
     }
 
-    public static function records(array $conditions = [], ?array $pagingParams = null) : array
+    public StaticModel function list(string $column, array $conditions = []) : array
     {
-        return static::make()->records($conditions, $pagingParams);
+        return StaticModel::make()->list($column, $conditions);
     }
 
-    public static function map(string $keyColumn, string $valueColumn, array $conditions = [], ?array $pagingParams = null) : array
+    public StaticModel function assoc(int|array $conditions = [], $idColumn = 'id') : array
     {
-        return static::make()->map($keyColumn, $valueColumn, $conditions, $pagingParams);
+        return StaticModel::make()->assoc($conditions, $idColumn);
     }
 
-    public static function insert(array $records) : int
+    public StaticModel function records(array $conditions = [], ?array $pagingParams = null) : array
     {
-        return static::make()->insert($records);
+        return StaticModel::make()->records($conditions, $pagingParams);
     }
 
-    public static function update(array $conditions, array $newData) : int
+    public StaticModel function map(string $keyColumn, string $valueColumn, array $conditions = [], ?array $pagingParams = null) : array
     {
-        return static::make()->update($records, $newData);
+        return StaticModel::make()->map($keyColumn, $valueColumn, $conditions, $pagingParams);
     }
 
-    public static function delete(array $conditions = []) : int
+    public StaticModel function insert(array $records) : int
     {
-        return static::make()->delete($conditions);
+        return StaticModel::make()->insert($records);
     }
 
-    public static function replace(array $conditions, array $records) : int
+    public StaticModel function update(array $conditions, array $newData) : int
     {
-        return static::replace($conditions, $records);
+        return StaticModel::make()->update($records, $newData);
+    }
+
+    public StaticModel function delete(array $conditions = []) : int
+    {
+        return StaticModel::make()->delete($conditions);
+    }
+
+    public StaticModel function replace(array $conditions, array $records) : int
+    {
+        return StaticModel::replace($conditions, $records);
     }
 
 }
