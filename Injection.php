@@ -9,19 +9,13 @@ class Injection implements InjectionInterface
     {
         if (count($arguments))
         {
-            if (array_is_list($arguments))
+            if (array_is_list($arguments) && $position < count($arguments))
             {
-                if ($position < count($arguments))
-                {
-                    return $arguments[$position];
-                }
+                return $arguments[$position];
             }
-            else
+            if (array_key_exists($name, $arguments))
             {
-                if (array_key_exists($name, $arguments))
-                {
-                    return $arguments[$name];
-                }
+                return $arguments[$name];
             }
         }
         return null;
