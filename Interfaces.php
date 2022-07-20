@@ -78,10 +78,8 @@ interface LogInterface
     public function fatal(string $message, array $data = [], ?string $module = null) : LogInterface;
 }
 
-interface ModelInterface
+interface StaticModelInterface
 {
-    public static function getInjection(InjectionInterface $injection);
-    public static function setInjection(InjectionInterface $injection);
     public static function value(string $column, array $conditions = []) : mixed;
     public static function list(string $column, array $conditions = []) : array;
     public static function assoc(int|array $conditions = [], $idColumn = 'id') : array;

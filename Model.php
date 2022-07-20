@@ -2,7 +2,7 @@
 
 namespace Krag;
 
-class Model
+class Model implements StaticModelInterface
 {
 
     protected static ?InjectionInterface $injection = null;
