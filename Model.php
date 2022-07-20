@@ -4,8 +4,11 @@ namespace Krag;
 
 class Model
 {
+    private string $table;
 
-    public function __construct(private InjectionInterface $injection, private string $table) {}
+    public function __construct(private InjectionInterface $injection, ?string $table = null) {
+        $this->table = $table ?? strtolower(static::class);
+    }
 
     protected function sql() : SQLInterface
     {
@@ -65,6 +68,11 @@ class StaticModel
 
     private static ?InjectionInterface $injection = null;
 
+    public static function __callStatic(string $name, array $arguments): mixed
+    {
+        return call_user_func_array([static::make(), $name], $arguments);
+    }
+
     public static function getInjection(InjectionInterface $injection)
     {
         return StaticModel::$injection;
@@ -77,7 +85,13 @@ class StaticModel
 
     private static function make() : Model
     {
-        return StaticModel::getInjection()->make('Model', ['table' => static::class]);
+        $class = 'Model'.ucfirst(static::class);
+        $table = strtolower(static::class);
+        if (class_exists($class))
+        {
+            return StaticModel::getInjection()->make($class);
+        }
+        return StaticModel::getInjection()->make('Model', compact('table'));
     }
 
     public static function value(string $column, array $conditions = []) : mixed
