@@ -10,7 +10,7 @@ class Response
 
     public function __construct(public array $data = [], public ?int $responseCode = null, public $headers = []) {}
 
-    public function redirect(callable $method, array $data = [], ?int $responseCode = null, $headers = [])
+    public function redirect(callable $method, array $data = [], ?int $responseCode = null, $headers = []) : Response
     {
         $this->isRedirect = true;
         $this->redirectMethod = $method;
@@ -20,6 +20,7 @@ class Response
         {
             $this->responseCode = $responseCode;
         }
+        return $this;
     }
 
 }

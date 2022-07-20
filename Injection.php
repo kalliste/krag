@@ -35,10 +35,7 @@ class Injection
         {
             $name = $rParam->getName();
             $arg = $this->matchParamToArguments($i, $name, $arguments);
-            if (is_null($arg))
-            {
-                $arg = $this->make(strval($param->getType()));
-            }
+            $arg = (is_null($arg)) ? $this->make(strval($param->getType())) : $arg;
             $passArguments[] = $arg;
             $i++;
         }

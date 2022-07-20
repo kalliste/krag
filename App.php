@@ -58,10 +58,7 @@ class App
 
     public function registerController(object $controller, ?string $name = null)
     {
-        if (!$name)
-        {
-            $name = get_class($controller);
-        }
+        $name = (is_string($name)) ? $name : get_class($controller);
         $this->controllers[$name] = $controller;
         $this->methodTree[$name] = $this->mapMethods($controller);
     }

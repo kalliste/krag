@@ -60,10 +60,7 @@ class Log
     {
         if ($level->value >= $this->minLevel->value)
         {
-            if (!$module)
-            {
-                $module = $this->module;
-            }
+            $module = (is_string($module)) ? $module : $this->module;
             if (is_object($this->leader))
             {
                 [$this->leader, $level->string()]($message, $data, $module);

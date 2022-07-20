@@ -22,13 +22,9 @@ class Config implements \IteratorAggregate
         return get_defined_vars();
     }
 
-    public function __get($name)
+    public function __get(string $name) : mixed
     {
-        if (array_key_exists($name, $this->settings))
-        {
-            return $this->settings[$name];
-        }
-        return null;
+        return (array_key_exists($name, $this->settings)) ? $this->settings[$name] : null;
     }
 
     public function getIterator() : \Traversable

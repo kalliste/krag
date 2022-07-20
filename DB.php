@@ -123,7 +123,7 @@ class DB
         return substr($this->conn->quote($str), 1, -1);
     }
 
-    private function noSpecials(string toEscape) : string
+    private function noSpecials(string $toEscape) : string
     {
         return preg_replace('/[^A-Za-z0-9_]/', '', $str);
     }
