@@ -75,52 +75,52 @@ class StaticModel
         StaticModel::$injection = $injection;
     }
 
-    private StaticModel function make() : Model
+    private static function make() : Model
     {
         return StaticModel::getInjection()->make('Model', ['table' => static::class]);
     }
 
-    public StaticModel function value(string $column, array $conditions = []) : mixed
+    public static function value(string $column, array $conditions = []) : mixed
     {
         return StaticModel::make()->value();
     }
 
-    public StaticModel function list(string $column, array $conditions = []) : array
+    public static function list(string $column, array $conditions = []) : array
     {
         return StaticModel::make()->list($column, $conditions);
     }
 
-    public StaticModel function assoc(int|array $conditions = [], $idColumn = 'id') : array
+    public static function assoc(int|array $conditions = [], $idColumn = 'id') : array
     {
         return StaticModel::make()->assoc($conditions, $idColumn);
     }
 
-    public StaticModel function records(array $conditions = [], ?array $pagingParams = null) : array
+    public static function records(array $conditions = [], ?array $pagingParams = null) : array
     {
         return StaticModel::make()->records($conditions, $pagingParams);
     }
 
-    public StaticModel function map(string $keyColumn, string $valueColumn, array $conditions = [], ?array $pagingParams = null) : array
+    public static function map(string $keyColumn, string $valueColumn, array $conditions = [], ?array $pagingParams = null) : array
     {
         return StaticModel::make()->map($keyColumn, $valueColumn, $conditions, $pagingParams);
     }
 
-    public StaticModel function insert(array $records) : int
+    public static function insert(array $records) : int
     {
         return StaticModel::make()->insert($records);
     }
 
-    public StaticModel function update(array $conditions, array $newData) : int
+    public static function update(array $conditions, array $newData) : int
     {
         return StaticModel::make()->update($records, $newData);
     }
 
-    public StaticModel function delete(array $conditions = []) : int
+    public static function delete(array $conditions = []) : int
     {
         return StaticModel::make()->delete($conditions);
     }
 
-    public StaticModel function replace(array $conditions, array $records) : int
+    public static function replace(array $conditions, array $records) : int
     {
         return StaticModel::replace($conditions, $records);
     }
