@@ -56,7 +56,7 @@ class Log
         return new static($module, $this, $this->minLevel);
     }
 
-    protected function handleLog(LogLevel $level, string $message, array $data = [], ?string $module = null)
+    protected function handleLog(LogLevel $level, string $message, array $data = [], ?string $module = null) : void
     {
         if ($level->value >= $this->minLevel->value)
         {
@@ -87,34 +87,40 @@ class Log
         return $ret;
     }
 
-    public function trace(string $message, array $data = [], ?string $module = null)
+    public function trace(string $message, array $data = [], ?string $module = null) : Log
     {
         $this->handleLog(LogLevel::TRACE, $message, $data, $module);
+        return $this;
     }
 
-    public function debug(string $message, array $data = [], ?string $module = null)
+    public function debug(string $message, array $data = [], ?string $module = null) : Log
     {
         $this->handleLog(LogLevel::DEBUG, $message, $data, $module);
+        return $this;
     }
 
-    public function info(string $message, array $data = [], ?string $module = null)
+    public function info(string $message, array $data = [], ?string $module = null) : Log
     {
         $this->handleLog(LogLevel::INFO, $message, $data, $module);
+        return $this;
     }
 
-    public function warn(string $message, array $data = [], ?string $module = null)
+    public function warn(string $message, array $data = [], ?string $module = null) : Log
     {
         $this->handleLog(LogLevel::WARN, $message, $data, $module);
+        return $this;
     }
 
-    public function error(string $message, array $data = [], ?string $module = null)
+    public function error(string $message, array $data = [], ?string $module = null) : Log
     {
         $this->handleLog(LogLevel::ERROR, $message, $data, $module);
+        return $this;
     }
 
-    public function fatal(string $message, array $data = [], ?string $module = null)
+    public function fatal(string $message, array $data = [], ?string $module = null) : Log
     {
         $this->handleLog(LogLevel::FATAL, $message, $data, $module);
+        return $this;
     }
 
 }
