@@ -82,47 +82,47 @@ class StaticModel
 
     public static function value(string $column, array $conditions = []) : mixed
     {
-        return StaticModel::make()->value();
+        return static::make()->value();
     }
 
     public static function list(string $column, array $conditions = []) : array
     {
-        return StaticModel::make()->list($column, $conditions);
+        return static::make()->list($column, $conditions);
     }
 
     public static function assoc(int|array $conditions = [], $idColumn = 'id') : array
     {
-        return StaticModel::make()->assoc($conditions, $idColumn);
+        return static::make()->assoc($conditions, $idColumn);
     }
 
     public static function records(array $conditions = [], ?array $pagingParams = null) : array
     {
-        return StaticModel::make()->records($conditions, $pagingParams);
+        return static::make()->records($conditions, $pagingParams);
     }
 
     public static function map(string $keyColumn, string $valueColumn, array $conditions = [], ?array $pagingParams = null) : array
     {
-        return StaticModel::make()->map($keyColumn, $valueColumn, $conditions, $pagingParams);
+        return static::make()->map($keyColumn, $valueColumn, $conditions, $pagingParams);
     }
 
     public static function insert(array $records) : int
     {
-        return StaticModel::make()->insert($records);
+        return static::make()->insert($records);
     }
 
     public static function update(array $conditions, array $newData) : int
     {
-        return StaticModel::make()->update($records, $newData);
+        return static::make()->update($records, $newData);
     }
 
     public static function delete(array $conditions = []) : int
     {
-        return StaticModel::make()->delete($conditions);
+        return static::make()->delete($conditions);
     }
 
     public static function replace(array $conditions, array $records) : int
     {
-        return StaticModel::replace($conditions, $records);
+        return static::replace($conditions, $records);
     }
 
 }
