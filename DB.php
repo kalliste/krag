@@ -109,7 +109,7 @@ class DB implements DBInterface
         $this->conn->lastInsertId();
     }
 
-    public function affectedRows($result) : int
+    public function affectedRows(object $result) : int
     {
         return $result->rowCount();
     }

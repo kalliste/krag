@@ -53,7 +53,7 @@ interface DBInterface
     public function fetchRow(object $result) : array;
     public function closeCursor(object $result) : bool;
     public function insertId() : int;
-    public function affectedRows($result) : int;
+    public function affectedRows(object $result) : int;
     public function escape(string|array $toEscape) : string|array;
     public function tableEscape(string $toEscape) : string;
     public function columnEscape(string|array $toEscape, ?string $table = null) : string;
