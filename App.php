@@ -38,7 +38,7 @@ class App implements AppInterface
         return $methods;
     }
 
-    protected function findHandler() : array
+    protected function findHandler(Request $request) : array
     {
         $action = $request->request['action'] ?? 'index';
         foreach ($this->methodTree as $controllerName => $methods)
@@ -88,7 +88,7 @@ class App implements AppInterface
 
     public function run(?Request $request = null)
     {
-        $request = $request ?? new Request($_REQUEST, $_SERVER['URI'], $SERVER['SERVER_NAME'], $_GET, $_POST, $_COOKIES);
+        $request = $request ?? new Request($_REQUEST, $_SERVER['URI'], $SERVER['SERVER_NAME'], $_GET, $_POST, $_COOKIE);
         $this->preFlight();
         [$controllerName, $methodName, $handler, $arguments] = $this->findHandler($request);
         $methodData = $this->callHandler($handler, $arguments, $request);

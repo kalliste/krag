@@ -2,19 +2,6 @@
 
 namespace Krag;
 
-class LogEntry
-{
-
-    public function __construct(
-        public LogLevel $level,
-        public string $message,
-        public int $time,
-        public array $data = [],
-        public ?string $module = null,
-    ) {}
-
-}
-
 class Log implements LogInterface, \IteratorAggregate
 {
 

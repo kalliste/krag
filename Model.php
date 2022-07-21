@@ -75,3 +75,5 @@ class Model implements StaticModelInterface
     }
 
 }
+
+?>
