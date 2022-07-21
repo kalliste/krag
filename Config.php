@@ -2,17 +2,15 @@
 
 namespace Krag;
 
-class Config implements \IteratorAggregate
+class Config
 {
-
-    private array $settings;
 
     public function __construct(array $defaultSettings = [], private string $configFile = 'config.php')
     {
-        if (file_exists($configFile))
+        $fileSettings = (file_exists($configFile)) ? $this->settingsFromConfigFile() : [];
+        foreach (array_merge($defaultSettings, $fileSettings) as $k => $v)
         {
-            $fileSettings = $this->settingsFromConfigFile();
-            $this->settings = array_merge($defaultSettings, $fileSettings);
+            $this->$k = $v;
         }
     }
 
@@ -20,16 +18,6 @@ class Config implements \IteratorAggregate
     {
         include($this->configFile);
         return get_defined_vars();
-    }
-
-    public function __get(string $name) : mixed
-    {
-        return (array_key_exists($name, $this->settings)) ? $this->settings[$name] : null;
-    }
-
-    public function getIterator() : \Traversable
-    {
-        return new \ArrayIterator($this->settings);
     }
 
 }
