@@ -65,7 +65,7 @@ interface ResultInterface
 
 interface RoutingInterface
 {
-    public function methodForRequest(RequestInfo $request) : ?callable;
+    public function methodForRequest(RequestInfo $request, array $controllers = []) : ?callable;
     public function makeLink(string $className, string $methodName, string $fromCurrent = '/', array $data = []) : string;
 }
 
@@ -105,7 +105,7 @@ interface SQLInterface
 
 interface ViewsInterface
 {
-    public function render(string $controllerName, string $methodName, array $methodData, array $globalData);
+    public function render(string $controllerName, string $methodName, array $methodData, array $globalData, RoutingInterface $routing);
 }
 
 ?>

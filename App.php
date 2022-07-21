@@ -51,7 +51,7 @@ class App implements AppInterface
     public function run(?Request $request = null)
     {
         $request = $request ?? new Request($_REQUEST, $_SERVER['URI'], $SERVER['SERVER_NAME'], $_GET, $_POST, $_COOKIE);
-        $method = $this->routing->methodForRequest($request);
+        $method = $this->routing->methodForRequest($request, $this->controllers);
         $controllerName = static::class;
         $methodName = 'notFound';
         $methodData = [];
@@ -72,7 +72,7 @@ class App implements AppInterface
             }
         }
         $globalData = $this->processGlobalFetchers($request);
-        $this->views->render($controllerName, $methodName, $methodData, $globalData);
+        $this->views->render($controllerName, $methodName, $methodData, $globalData, $this->routing);
     }
 
 }
