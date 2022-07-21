@@ -6,57 +6,14 @@ class App implements AppInterface
 {
 
     protected array $controllers = [];
-    protected array $methodTree = [];
 
     public function __construct(
-        protected Views $views,
+        protected InjectionInterface $injection,
+        protected RoutingInterface $routing,
+        protected ViewsInterface $views,
         protected string $controllerPath = 'controllers',
         protected array $globalFetchers = [],
     ) {}
-
-    protected function preFlight()
-    {
-    }
-
-    protected function cleanup()
-    {
-    }
-
-    protected function mapMethods(object $object) : array
-    {
-        $class = get_class($object);
-        $methods = [];
-        foreach (get_class_methods($object) as $methodName)
-        {
-            $rmethod = new \ReflectionMethod($class, $methodName);
-            $methods[$methodName] = [];
-            foreach ($rmethod->getParameters() as $param)
-            {
-                $methods[$methodName][$param->getName()] = $param;
-            }
-        }
-        return $methods;
-    }
-
-    protected function findHandler(Request $request) : array
-    {
-        $action = $request->request['action'] ?? 'index';
-        foreach ($this->methodTree as $controllerName => $methods)
-        {
-            if (array_key_exists($action, $methods))
-            {
-                $handler = [$this->controllers[$controllerName], $action];
-                return [$controllerName, $action, $handler, $methods[$action]];
-            }
-        }
-        return [function() { return []; }, ($action == 'index') ? 'index' : 'notFound', []];
-    }
-
-    protected function callHandler(callable $handler, array $arguments, ?RequestInfo $request) : mixed
-    {
-        $pass = array_map(function($argument) { return $request->request[$argumentName] ?? null; }, $arguments);
-        return call_user_func_array($handler, $pass);
-    }
 
     protected function processGlobalFetchers($request) : array
     {
@@ -68,12 +25,18 @@ class App implements AppInterface
         return $ret;
     }
 
+    protected function methodRegistered($controllerName, $methodName) : bool
+    {
+        return (array_key_exists($controllerName, $this->controllers) && in_array($methodName, $this->controllers[$controllerName]));
+    }
+
     public function addGlobalFetcher(string $name, callable $method)
     {
         $this->globalFetchers[$name] = $method;
     }
 
-    public function registerController(string|object $controller, ?string $name = null) { if (is_string($controller))
+    public function registerController(string|object $controller, ?string $name = null) {
+        if (is_string($controller))
         {
             if (!class_exists($controller))
             {
@@ -82,19 +45,34 @@ class App implements AppInterface
             $controller = new $controller();
         }
         $name = (is_string($name)) ? $name : get_class($controller);
-        $this->controllers[$name] = $controller;
-        $this->methodTree[$name] = $this->mapMethods($controller);
+        $this->controllers[$name] = get_class_methods($controller);
     }
 
     public function run(?Request $request = null)
     {
         $request = $request ?? new Request($_REQUEST, $_SERVER['URI'], $SERVER['SERVER_NAME'], $_GET, $_POST, $_COOKIE);
-        $this->preFlight();
-        [$controllerName, $methodName, $handler, $arguments] = $this->findHandler($request);
-        $methodData = $this->callHandler($handler, $arguments, $request);
-        $allData = array_merge($this->processGlobalFetchers($request), $methodData);
-        $this->views->render($controllerName, $methodName, $allData);
-        $this->cleanup();
+        $method = $this->routing->methodForRequest($request);
+        $controllerName = static::class;
+        $methodName = 'notFound';
+        $methodData = [];
+        if (is_string($method))
+        {
+            $methodName = $method;
+        }
+        if (is_array($method))
+        {
+            [$controllerName, $methodName] = $method;
+            if (!count($this->controllers))
+            {
+                $this->registerController($controllerName);
+            }
+            if ($this->methodRegistered($controllerName, $methodName))
+            {
+                $methodData = $this->injection->callMethod($controllerName, $methodName, $request);
+            }
+        }
+        $globalData = $this->processGlobalFetchers($request);
+        $this->views->render($controllerName, $methodName, $methodData, $globalData);
     }
 
 }

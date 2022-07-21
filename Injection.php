@@ -48,7 +48,7 @@ class Injection implements InjectionInterface
         return null;
     }
 
-    public function callMethodWithInjection(object|string $objectOrMethod, ?string $method = null, array $arguments = []) : mixed
+    public function callMethod(object|string $objectOrMethod, ?string $method = null, array $arguments = []) : mixed
     {
         if (is_null($method))
         {

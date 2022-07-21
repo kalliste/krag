@@ -29,7 +29,7 @@ interface DBInterface
 interface InjectionInterface
 {
     public function make(string $class, array $arguments = []) : ?object;
-    public function callMethodWithInjection(object|string $objectOrMethod, ?string $method = null, array $arguments = []) : mixed;
+    public function callMethod(object|string $objectOrMethod, ?string $method = null, array $arguments = []) : mixed;
 }
 
 interface LogInterface
@@ -61,6 +61,12 @@ interface ResultInterface
 {
     public function redirect(callable $method, array $data = [], ?int $responseCode = null, $headers = []) : ResultInterface;
     public function getResponse() : Response;
+}
+
+interface RoutingInterface
+{
+    public function methodForRequest(RequestInfo $request) : ?callable;
+    public function makeLink(string $className, string $methodName, string $fromCurrent = '/', array $data = []) : string;
 }
 
 interface SQLInterface
@@ -99,7 +105,7 @@ interface SQLInterface
 
 interface ViewsInterface
 {
-    public function render(string $controllerName, string $methodName, array $data);
+    public function render(string $controllerName, string $methodName, array $methodData, array $globalData);
 }
 
 ?>

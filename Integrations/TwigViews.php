@@ -31,9 +31,9 @@ class TwigViews implements ViewsInterface
         return $engine->render($this->templateFile($controllerName, $methodName), $data);
     }
 
-    public function render(string $controllerName, string $methodName, array $data)
+    public function render(string $controllerName, string $methodName, array $methodData, array $globalData)
     {
-        $content = $this->fillTemplate($controllerName, $methodName, $data);
+        $content = $this->fillTemplate($controllerName, $methodName, array_merge($globalData, $methodData));
         print($content);
     }
 
