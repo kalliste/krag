@@ -118,7 +118,7 @@ class DB implements DBInterface
     {
         if (is_array($toEscape))
         {
-            return array_map([$this, 'escape'], $toEscape);
+            return array_map($this->escape(...), $toEscape);
         }
         return substr($this->conn->quote($str), 1, -1);
     }
@@ -141,7 +141,7 @@ class DB implements DBInterface
         $cr = $this->columnQuoteCharRight;
         if (is_array($toEscape))
         {
-            return implode(', ', array_map([$this, 'columnEscape'], $toEscape));
+            return implode(', ', array_map($this->columnEscape(...), $toEscape));
         }
         $table = (is_string($table)) ? $this->tableEscape($table).'.' : '';
         $escaped = $this->nosSpecials($toEscape);
