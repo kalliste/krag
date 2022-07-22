@@ -47,12 +47,14 @@ class App implements AppInterface
         return [];
     }
 
-    public function setGlobalFetcher(string $name, callable $method)
+    public function setGlobalFetcher(string $name, callable $method) : App
     {
         $this->globalFetchers[$name] = $method;
+        return $this;
     }
 
-    public function registerController(string|object $controller, ?string $name = null) {
+    public function registerController(string|object $controller, ?string $name = null) : App
+    {
         if (is_string($controller))
         {
             if (!class_exists($controller))
@@ -67,6 +69,7 @@ class App implements AppInterface
         }
         $name = (is_string($name)) ? $name : get_class($controller);
         $this->controllers[$name] = get_class_methods($controller);
+        return $this;
     }
 
     public function run(?Request $request = null)

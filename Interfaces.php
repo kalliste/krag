@@ -4,9 +4,9 @@ namespace Krag;
 
 interface AppInterface
 {
-    public function registerController(string|object $controller, ?string $name = null);
-    public function setGlobalFetcher(string $name, callable $method);
     public function run(?Request $request = null);
+    public function registerController(string|object $controller, ?string $name = null) : AppInterface;
+    public function setGlobalFetcher(string $name, callable $method) : AppInterface;
 }
 
 interface DBInterface
@@ -28,22 +28,22 @@ interface DBInterface
 
 interface InjectionInterface
 {
-    public function setSingleton(string $class, ?object $obj = null) : InjectionInterface;
-    public function setClassMapping(string $fromClass, string $toClass) : InjectionInterface;
     public function make(string $class, array $withValues = [], object|string|null $whosAsking = null) : ?object;
     public function callMethod(object|string $objectOrMethod, ?string $method = null, array $withValues = [], object|string|null $whosAsking = null) : mixed;
+    public function setSingleton(string $class, ?object $obj = null) : InjectionInterface;
+    public function setClassMapping(string $fromClass, string $toClass) : InjectionInterface;
 }
 
 interface LogInterface
 {
-    public function makeFollower(string $module): LogInterface;
-    public function filter(LogLevel $minLevel = LogLevel::TRACE, ?string $module = null) : array;
     public function trace(string $message, array $data = [], ?string $module = null) : LogInterface;
     public function debug(string $message, array $data = [], ?string $module = null) : LogInterface;
     public function info(string $message, array $data = [], ?string $module = null) : LogInterface;
     public function warn(string $message, array $data = [], ?string $module = null) : LogInterface;
     public function error(string $message, array $data = [], ?string $module = null) : LogInterface;
     public function fatal(string $message, array $data = [], ?string $module = null) : LogInterface;
+    public function filter(LogLevel $minLevel = LogLevel::TRACE, ?string $module = null) : array;
+    public function makeFollower(string $module): LogInterface;
 }
 
 interface StaticModelInterface
