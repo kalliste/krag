@@ -2,8 +2,8 @@
 
 use Krag\Injection;
 
-$k = new Injection(['Krag\Config', 'Krag\DB']);
-$k->setSingleton($k)->make('DB', $k->make('Config'));
+$k = new Injection(singletons: ['Krag\Config', 'PDO']);
+$k->make('PDO', $k->make('Config'));
 $k->make('App')->run();
 
 ?>

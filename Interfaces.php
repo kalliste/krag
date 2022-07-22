@@ -26,10 +26,15 @@ interface DBInterface
     public function setBlob(string $query, string $blob) : object;
 }
 
+interface HTTPInterface
+{
+    public function handleResponse(Response $response);
+}
+
 interface InjectionInterface
 {
-    public function make(string $class, array $withValues = [], object|string|null $whosAsking = null) : ?object;
-    public function callMethod(object|string $objectOrMethod, ?string $method = null, array $withValues = [], object|string|null $whosAsking = null) : mixed;
+    public function make(string $class, array $withValues = []) : ?object;
+    public function callMethod(object|string $objectOrMethod, ?string $method = null, array $withValues = []) : mixed;
     public function setSingleton(string $class, ?object $obj = null) : InjectionInterface;
     public function setClassMapping(string $fromClass, string $toClass) : InjectionInterface;
 }

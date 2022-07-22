@@ -20,7 +20,7 @@ class Model implements StaticModelInterface
 
     protected function sql() : SQLInterface
     {
-        return static::injection->make('SQL', '[]', static::class);
+        return static::injection->make('SQLInterface');
     }
 
     protected function table() : string

@@ -5,19 +5,15 @@ namespace Krag;
 class DB implements DBInterface
 {
 
-    private \PDO $conn;
     private string $dbType;
     private string $columnQuoteCharLeft;
     private string $columnQuoteCharRight;
     private string $randomFuncSQL;
 
     public function __construct(
-        private string $dsn,
-        private string $userName,
-        private string $password,
-        ?Log $log = null,
+        private \PDO $conn,
+        ?LogInterface $log = null,
     ) {
-        $this->conn = new \PDO($dsn, $userName, $password);
         preg_match('/(.*):/', $dsn, $matches);
         if ($matches)
         {

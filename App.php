@@ -11,6 +11,7 @@ class App implements AppInterface
         protected InjectionInterface $injection,
         protected RoutingInterface $routing,
         protected ViewsInterface $views,
+        protected HTTPInterface $http,
         protected string $controllerPath = 'controllers',
         protected array $globalFetchers = [],
     ) {}
@@ -21,7 +22,7 @@ class App implements AppInterface
             array_keys($this->globalFetchers),
             function ($method)
             {
-                return $this->injection->callMethod($method, $request, [], $this);
+                return $this->injection->callMethod($method, withValues: $request);
             }
         );
     }
@@ -42,7 +43,7 @@ class App implements AppInterface
         }
         if ($this->methodRegistered($controllerName, $methodName))
         {
-            return $this->injection->callMethod($this->controllers[$controllerName], $methodName, $request, $this);
+            return $this->injection->callMethod($this->controllers[$controllerName], $methodName, $request);
         }
         return [];
     }
@@ -65,7 +66,7 @@ class App implements AppInterface
                     require_once($fileName);
                 }
             }
-            $controller = $this->injection->make($controller, [], $this);
+            $controller = $this->injection->make($controller);
         }
         $name = (is_string($name)) ? $name : get_class($controller);
         $this->controllers[$name] = get_class_methods($controller);
@@ -74,7 +75,19 @@ class App implements AppInterface
 
     public function run(?Request $request = null)
     {
-        $request = $request ?? new Request($_REQUEST, $_SERVER['URI'], $SERVER['SERVER_NAME'], $_GET, $_POST, $_COOKIE);
+        if (is_null($request))
+        {
+            $request = $this->injection->make('Request',
+                [
+                    'request' => $_REQUEST,
+                    'uri' => $_SERVER['uri'],
+                    'serverName' => $_SERVER['SERVER_NAME'],
+                    'get' => $_GET,
+                    'post' => $_POST,
+                    'cookies' => $_COOKIE,
+                ]
+            );
+        }
         $method = $this->routing->methodForRequest($request, $this->controllers);
         $globalData = $this->processGlobalFetchers($request->request);
         $controllerName = static::class;
@@ -85,7 +98,14 @@ class App implements AppInterface
             [$controllerName, $methodName] = $method;
             $methodData = $this->getMethodData($controllerName, $methodName);
         }
-        $this->views->render($controllerName, $methodName, $methodData, $globalData, $this->routing);
+        if ($methodData instanceof Response)
+        {
+            $http->handleResponse($methodData);
+        }
+        if (is_array($methodData) || ($methodData instanceof Response && !$methodData->isRedirect))
+        {
+            $this->views->render($controllerName, $methodName, $methodData, $globalData, $this->routing);
+        }
     }
 
 }

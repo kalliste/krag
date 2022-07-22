@@ -9,19 +9,20 @@ class Injection implements InjectionInterface
         protected array $singletons = [],
         protected array $classMappings = [],
         protected bool $makeFallbackArguments = false,
+        protected ?InjectionInterface $leader = null,
     ) {
         if (count($singletons) && array_is_list($singletons))
         {
             $this->singletons = array_fill_keys($singletons, null);
         }
-        $this->setClassMapping('Krag\AppInterface', 'Krag\App');
-        $this->setClassMapping('Krag\DBInterface', 'Krag\DB');
-        $this->setClassMapping('Krag\InjectionInterface', 'Krag\Injection');
-        $this->setClassMapping('Krag\LogInterface', 'Krag\Log');
-        $this->setClassMapping('Krag\ResultInterface', 'Krag\Result');
-        $this->setClassMapping('Krag\RoutingInterface', 'Krag\Routing');
-        $this->setClassMapping('Krag\SQLInterface', 'Krag\SQL');
-        $this->setClassMapping('Krag\ViewsInterface', 'Krag\Views');
+        $this->setClassMapping('App', 'Krag\App', 'Krag', true);
+        $this->setClassMapping('DB', 'Krag\DB', 'Krag', true);
+        $this->setClassMapping('Injection', 'Krag\Injection', 'Krag', true);
+        $this->setClassMapping('Log', 'Krag\Log', 'Krag', true);
+        $this->setClassMapping('Result', 'Krag\Result', 'Krag', true);
+        $this->setClassMapping('Routing', 'Krag\Routing', 'Krag', true);
+        $this->setClassMapping('SQL', 'Krag\SQL', 'Krag', true);
+        $this->setClassMapping('Views', 'Krag\Views', 'Krag', true);
     }
 
     protected function matchParamToValues(int $position, string $name, array|object $withValues) : mixed
@@ -59,8 +60,10 @@ class Injection implements InjectionInterface
 
     protected function makeArgumentForParameter(\ReflectionParameter $rParam) : mixed
     {
-        $arg = $this->matchParamToValues($i, $rParam->getName(), $withValues);
-        $arg = $arg ?? $this->make(strval($rParam->getType()));
+        $type = strval($rParam->getType());
+        $arg = ($this instanceof $type) ? $this : null;
+        $arg = $arg ?? $this->matchParamToValues($i, $rParam->getName(), $withValues);
+        $arg = $arg ?? $this->make($type);
         $arg = $arg ?? ($rParam->isOptional()) ? $rParam->getDefaultValue() : null;
         if (!$rParam->isOptional())
         {
@@ -91,14 +94,35 @@ class Injection implements InjectionInterface
         return $this;
     }
 
-    public function setClassMapping(string $fromClass, string $toClass) : InjectionInterface
+    public function setClassMapping(string $fromClass, string $toClass, ?string $andNamespace = null, string|bool $andInterface = false) : InjectionInterface
     {
         $this->classMappings[$fromClass] = $toClass;
-        return $this;
+        $andInterface = (is_bool($andInterface)) ? 'Interface' : $andInterface;
+        if (is_null($andNamespace))
+        {
+            if ($andInterface)
+            {
+                $this->classMappings[$fromClass.'Interface'] = $toClass;
+            }
+        }
+        else
+        {
+            $namespace = rtrim($andNamespace, '\\').'\\';
+            $this->classMappings[$namespace.$fromClass] = $toClass;
+            if ($andInterface)
+            {
+                $this->classMappings[$namespace.$fromClass.'Interface'] = $toClass;
+            }
+        }
+        return $ret;
     }
 
-    public function make(string $class, array|object $withValues = [], object|string|null $whosAsking = null) : ?object
+    public function make(string $class, array|object $withValues = []) : ?object
     {
+        if ($this->leader)
+        {
+            return $this->leader->make($class, $withValues);
+        }
         $class = $this->classMappings[$class] ?? $class;
         if (array_key_exists($class, $this->singletons) && !is_null($this->singletons[$class]))
         {
@@ -119,8 +143,12 @@ class Injection implements InjectionInterface
         return null;
     }
 
-    public function callMethod(object|string $objectOrMethod, ?string $method = null, array|object $withValues = [], object|string|null $whosAsking = null) : mixed
+    public function callMethod(object|string $objectOrMethod, ?string $method = null, array|object $withValues = []) : mixed
     {
+        if ($this->leader)
+        {
+            return $this->leader->callMethod($objectOrMethod, $method, $withValues);
+        }
         if (is_null($method))
         {
             $rMethod = new \ReflectionMethod($objectOrMethod);
