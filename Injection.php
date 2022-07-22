@@ -22,7 +22,6 @@ class Injection implements InjectionInterface
         $this->setClassMapping('Krag\RoutingInterface', 'Krag\Routing');
         $this->setClassMapping('Krag\SQLInterface', 'Krag\SQL');
         $this->setClassMapping('Krag\ViewsInterface', 'Krag\Views');
-        $this->setSingleton('Krag\Injection', $this);
     }
 
     protected function matchParamToValues(int $position, string $name, array|object $withValues) : mixed

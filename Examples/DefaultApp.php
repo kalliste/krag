@@ -3,6 +3,7 @@
 use Krag\Injection;
 
 $k = new Injection(['Krag\Config', 'Krag\DB']);
-$k->make('DB', $k->make('Config'))->make('App')->run();
+$k->setSingleton($k)->make('DB', $k->make('Config'));
+$k->make('App')->run();
 
 ?>
