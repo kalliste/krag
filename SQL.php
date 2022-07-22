@@ -32,19 +32,16 @@ class SQL implements SQLInterface
         $first = true;
         foreach ($conditions as $k => $v)
         {
-            if (!$first)
-            {
-                $ret .= ', ';
-            }
-            $first = false;
+            $ret .= ($first) ? '' : ', ';
             $ret .= $this->fieldValue($k, $v, $table);
+            $first = false;
         }
         return $ret;
     }
 
     protected function splitByComma(string $str) : array
     {
-        return array_diff(array_map(trim(...), explode(',', $fields)), ['']);
+        return array_diff(array_map(trim(...), explode(',', $str)), ['']);
     }
 
     /************************************************************************/
@@ -57,9 +54,9 @@ class SQL implements SQLInterface
             $this->haveSelect = true;
         }
         $fields = (is_string($fields)) ? $this->splitByComma($fields) : $fields;
-        if (count($fields) && array_is_list($fields))
+        if (array_is_list($fields))
         {
-            $ret .= $this->db->columnEscape($fields, $table).' ';
+            $ret .= (count($fields)) ? $this->db->columnEscape($fields, $table).' ' : '* ';
         }
         else
         {
@@ -68,8 +65,7 @@ class SQL implements SQLInterface
             foreach ($fields as $field => $alias)
             {
                 $ret .= $first ? '' : ', ';
-                $ret .= $this->db->columnEscape($field, $table);
-                $ret .= ' AS '.$alias.' ';
+                $ret .= $this->db->columnEscape($field, $table).' AS '.$alias.' ';
                 $first = false;
             }
         }
@@ -77,7 +73,14 @@ class SQL implements SQLInterface
         return $this;
     }
 
-    // FIXME: Add count()
+    public function count(?string $field = null, ?string $table = null, ?string $alias = null) : SQL
+    {
+        $field = (is_null($field)) ? '*' : $this->db->columnEscape($field);
+        $table = (is_null($table)) ? '' : '.'.$this->db->tableEscape($table);
+        $as = (is_null($alias)) ? '' : ' AS '.$this-db->aliasEscape($alias).' ';
+        $this->query .= ' COUNT('.$table.$field.') '.$as;
+        return $this;
+    }
 
     public function from(string $table, ?string $alias = null) : SQL
     {

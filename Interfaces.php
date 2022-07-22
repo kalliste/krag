@@ -74,6 +74,7 @@ interface RoutingInterface
 interface SQLInterface
 {
     public function select(string|array $fields = [], ?string $table = null) : SQLInterface;
+    public function count(?string $field = null, ?string $table = null, ?string $alias = null) : SQLInterface;
     public function from(string $table, ?string $alias = null) : SQLInterface;
     public function left() : SQLInterface;
     public function right() : SQLInterface;
