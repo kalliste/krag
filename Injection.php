@@ -67,8 +67,11 @@ class Injection implements InjectionInterface
             $arg = $this->matchParamToValues($i, $name, $withValues);
             $arg = $arg ?? $this->make(strval($param->getType()));
             $arg = $arg ?? ($param->isOptional()) ? $param->getDefaultValue() : null;
-            $arg = $arg ?? $this->fallback($rMethod, $rParam);
-            if (!($param->isOptional() && is_null($arg)))
+            if (!$param->isOptional())
+            {
+                $arg = $arg ?? $this->makeArgumentFallback($rMethod, $rParam);
+            }
+            if (!is_null($arg) || !$param->isOptional())
             {
                 $passArguments[$name] = $arg;
             }
