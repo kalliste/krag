@@ -30,16 +30,13 @@ class Injection implements InjectionInterface
         {
             return $withValues->$name ?? null;
         }
-        if (count($withValues))
+        if (array_is_list($withValues) && $position < count($withValues))
         {
-            if (array_is_list($withValues) && $position < count($withValues))
-            {
-                return $withValues[$position];
-            }
-            if (array_key_exists($name, $withValues))
-            {
-                return $withValues[$name];
-            }
+            return $withValues[$position];
+        }
+        if (array_key_exists($name, $withValues))
+        {
+            return $withValues[$name];
         }
         return null;
     }
