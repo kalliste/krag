@@ -9,8 +9,9 @@ class Log implements LogInterface, \IteratorAggregate
 
     public function __construct(
         public ?string $module = null,
-        public ?Log $leader = null,
         public LogLevel $minLevel = LogLevel::TRACE,
+        public ?LogInterface $leader = null,
+        public ?InjectionInterface $injection = null,
     ) {}
 
     public function getIterator() : \Traversable
@@ -20,7 +21,17 @@ class Log implements LogInterface, \IteratorAggregate
 
     public function makeFollower(string $module): Log
     {
-        return new static($module, $this, $this->minLevel);
+        if (is_null($this->leader))
+        {
+            return new static($module, $this, $this->minLevel);
+        }
+        return $this->injection->make(static::class,
+            [
+                'module' => $module,
+                'minLevel' => $this->minLevel,
+                'leader' => $this,
+            ]
+        );
     }
 
     protected function handleLog(LogLevel $level, string $message, array $data = [], ?string $module = null) : Log
