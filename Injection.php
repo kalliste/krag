@@ -5,50 +5,73 @@ namespace Krag;
 class Injection implements InjectionInterface
 {
 
-    private function matchParamToArguments(int $position, string $name, array $arguments) : mixed
+    public function __construct(private bool $makeFallbackArguments = false) {}
+
+    protected function matchParamToValues(int $position, string $name, array $withValues) : mixed
     {
-        if (count($arguments))
+        if (count($withValues))
         {
-            if (array_is_list($arguments) && $position < count($arguments))
+            if (array_is_list($withValues) && $position < count($withValues))
             {
-                return $arguments[$position];
+                return $withValues[$position];
             }
-            if (array_key_exists($name, $arguments))
+            if (array_key_exists($name, $withValues))
             {
-                return $arguments[$name];
+                return $withValues[$name];
             }
         }
         return null;
     }
 
-    private function makeArgumentsForMethod(\ReflectionMethod $rMethod, array $arguments = []) : array
+    protected function makeArgumentFallback(\ReflectionMethod $rMethod, \ReflectionParameter $rParam) : mixed
+    {
+        if ($this->makeFallbackArguments)
+        {
+            return match ($param->getType())
+            {
+                '' => '',
+                'string' => '',
+                'int' => 0,
+                'float' => 0.0,
+                'bool' => false,
+            };
+        }
+        return null;
+    }
+
+    protected function makeArgumentsForMethod(\ReflectionMethod $rMethod, array $withValues = []) : array
     {
         $passArguments = [];
         $i = 0;
         foreach ($rMethod->getParameters() as $rParam)
         {
             $name = $rParam->getName();
-            $arg = $this->matchParamToArguments($i, $name, $arguments);
+            $arg = $this->matchParamToValues($i, $name, $withValues);
             $arg = $arg ?? $this->make(strval($param->getType()));
-            $passArguments[] = $arg;
+            $arg = $arg ?? ($param->isOptional()) ? $param->getDefaultValue() : null;
+            $arg = $arg ?? $this->fallback($rMethod, $rParam);
+            if (!($param->isOptional() && is_null($arg)))
+            {
+                $passArguments[$name] = $arg;
+            }
             $i++;
         }
         return $passArguments;
     }
 
-    public function make(string $class, array $arguments = []) : ?object
+    public function make(string $class, array $withValues = []) : ?object
     {
         if (class_exists($class))
         {
             $rClass = new \ReflectionClass($class);
             $rConstructor = $rClass->getConstructor();
-            $passArguments = $this->makeArgumentsForMethod($rConstructor, $arguments);
+            $passArguments = $this->makeArgumentsForMethod($rConstructor, $withValues);
             return $rClass->newInstanceArgs($passArguments);
         }
         return null;
     }
 
-    public function callMethod(object|string $objectOrMethod, ?string $method = null, array $arguments = []) : mixed
+    public function callMethod(object|string $objectOrMethod, ?string $method = null, array $withValues = []) : mixed
     {
         if (is_null($method))
         {
@@ -60,7 +83,7 @@ class Injection implements InjectionInterface
             $rMethod = new \ReflectionMethod($objectOrMethod, $method);
             $toCall = [$objectOrMethod, $method];
         }
-        $arguments = $this->makeArgumentsForMethod($rMethod, $arguments);
+        $arguments = $this->makeArgumentsForMethod($rMethod, $withValues);
         return call_user_func_array($toCall, $arguments);
     }
 

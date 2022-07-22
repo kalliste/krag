@@ -4,8 +4,8 @@ namespace Krag;
 
 interface AppInterface
 {
-    public function registerController(object $controller, ?string $name = null);
-    public function addGlobalFetcher(string $name, callable $method);
+    public function registerController(string|object $controller, ?string $name = null);
+    public function setGlobalFetcher(string $name, callable $method);
     public function run(?Request $request = null);
 }
 
@@ -28,8 +28,8 @@ interface DBInterface
 
 interface InjectionInterface
 {
-    public function make(string $class, array $arguments = []) : ?object;
-    public function callMethod(object|string $objectOrMethod, ?string $method = null, array $arguments = []) : mixed;
+    public function make(string $class, array $withValues = []) : ?object;
+    public function callMethod(object|string $objectOrMethod, ?string $method = null, array $withValues = []) : mixed;
 }
 
 interface LogInterface
@@ -90,7 +90,7 @@ interface SQLInterface
     public function group(string|array $groupBy) : SQLInterface;
     public function order(string $sort, ?string $maybeDesc = null, ...$more) : SQLInterface;
     public function limit(int $per_page, int $page = 1) : SQLInterface;
-    public function orderLimit(array $pagingParams) : SQL;
+    public function orderLimit(array $pagingParams) : SQLInterface;
     public function value() : mixed;
     public function list() : array;
     public function assoc() : array;

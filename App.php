@@ -15,22 +15,26 @@ class App implements AppInterface
         protected array $globalFetchers = [],
     ) {}
 
-    protected function processGlobalFetchers($request) : array
+    protected function processGlobalFetchers(array $request) : array
     {
-        $ret = [];
-        foreach ($this->globalFetchers as $name => $method)
-        {
-            $ret[$name] = call_user_func_array($method, [$request]);
-        }
-        return $ret;
+        return array_combine(
+            array_keys($this->globalFetchers),
+            function ($method)
+            {
+                return $this->injection->callMethod($method, $request);
+            }
+        );
     }
 
     protected function methodRegistered($controllerName, $methodName) : bool
     {
-        return (array_key_exists($controllerName, $this->controllers) && in_array($methodName, $this->controllers[$controllerName]));
+        return (
+            array_key_exists($controllerName, $this->controllers) &&
+            in_array($methodName, $this->controllers[$controllerName])
+        );
     }
 
-    public function addGlobalFetcher(string $name, callable $method)
+    public function setGlobalFetcher(string $name, callable $method)
     {
         $this->globalFetchers[$name] = $method;
     }
@@ -71,7 +75,7 @@ class App implements AppInterface
                 $methodData = $this->injection->callMethod($controllerName, $methodName, $request);
             }
         }
-        $globalData = $this->processGlobalFetchers($request);
+        $globalData = $this->processGlobalFetchers($request->request);
         $this->views->render($controllerName, $methodName, $methodData, $globalData, $this->routing);
     }
 
