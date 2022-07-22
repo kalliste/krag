@@ -57,23 +57,28 @@ class Injection implements InjectionInterface
         return null;
     }
 
+    protected function makeArgumentForParameter(\ReflectionParameter $rParam) : mixed
+    {
+        $arg = $this->matchParamToValues($i, $rParam->getName(), $withValues);
+        $arg = $arg ?? $this->make(strval($rParam->getType()));
+        $arg = $arg ?? ($rParam->isOptional()) ? $rParam->getDefaultValue() : null;
+        if (!$rParam->isOptional())
+        {
+            $arg = $arg ?? $this->makeArgumentFallback($rMethod, $rParam);
+        }
+        return $arg;
+    }
+
     protected function makeArgumentsForMethod(\ReflectionMethod $rMethod, array|object $withValues = []) : array
     {
         $passArguments = [];
         $i = 0;
         foreach ($rMethod->getParameters() as $rParam)
         {
-            $name = $rParam->getName();
-            $arg = $this->matchParamToValues($i, $name, $withValues);
-            $arg = $arg ?? $this->make(strval($param->getType()));
-            $arg = $arg ?? ($param->isOptional()) ? $param->getDefaultValue() : null;
-            if (!$param->isOptional())
+            $arg = $this->makeArgumentForParameter($rParam);
+            if (!is_null($arg) || !$rParam->isOptional())
             {
-                $arg = $arg ?? $this->makeArgumentFallback($rMethod, $rParam);
-            }
-            if (!is_null($arg) || !$param->isOptional())
-            {
-                $passArguments[$name] = $arg;
+                $passArguments[$rParam->getName()] = $arg;
             }
             $i++;
         }
