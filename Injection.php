@@ -26,12 +26,12 @@ class Injection implements InjectionInterface
 
     protected function matchParamToValues(int $position, string $name, array|object $withValues) : mixed
     {
+        if (is_object($withValues))
+        {
+            return $withValues->$name ?? null;
+        }
         if (count($withValues))
         {
-            if (is_object($withValues))
-            {
-                return $withValues->$name ?? null;
-            }
             if (array_is_list($withValues) && $position < count($withValues))
             {
                 return $withValues[$position];
