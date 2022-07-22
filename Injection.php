@@ -59,7 +59,7 @@ class Injection implements InjectionInterface
         return $passArguments;
     }
 
-    public function make(string $class, array $withValues = []) : ?object
+    public function make(string $class, array $withValues = [], object|string|null $whosAsking = null) : ?object
     {
         if (class_exists($class))
         {
@@ -71,7 +71,7 @@ class Injection implements InjectionInterface
         return null;
     }
 
-    public function callMethod(object|string $objectOrMethod, ?string $method = null, array $withValues = []) : mixed
+    public function callMethod(object|string $objectOrMethod, ?string $method = null, array $withValues = [], object|string|null $whosAsking = null) : mixed
     {
         if (is_null($method))
         {

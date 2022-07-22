@@ -21,7 +21,7 @@ class App implements AppInterface
             array_keys($this->globalFetchers),
             function ($method)
             {
-                return $this->injection->callMethod($method, $request);
+                return $this->injection->callMethod($method, $request, [], $this);
             }
         );
     }
@@ -72,7 +72,7 @@ class App implements AppInterface
             }
             if ($this->methodRegistered($controllerName, $methodName))
             {
-                $methodData = $this->injection->callMethod($controllerName, $methodName, $request);
+                $methodData = $this->injection->callMethod($controllerName, $methodName, $request, $this);
             }
         }
         $globalData = $this->processGlobalFetchers($request->request);

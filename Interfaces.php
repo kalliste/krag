@@ -28,8 +28,8 @@ interface DBInterface
 
 interface InjectionInterface
 {
-    public function make(string $class, array $withValues = []) : ?object;
-    public function callMethod(object|string $objectOrMethod, ?string $method = null, array $withValues = []) : mixed;
+    public function make(string $class, array $withValues = [], object|string|null $whosAsking = null) : ?object;
+    public function callMethod(object|string $objectOrMethod, ?string $method = null, array $withValues = [], object|string|null $whosAsking = null) : mixed;
 }
 
 interface LogInterface
