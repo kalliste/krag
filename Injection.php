@@ -12,7 +12,7 @@ class Injection implements InjectionInterface
     ) {
         if (count($singletons) && array_is_list($singletons))
         {
-            $this->singletons = array_combine($singletons, array_fill(0, count($singletons), null));
+            $this->singletons = array_fill_keys($singletons, null);
         }
         $this->setClassMapping('Krag\AppInterface', 'Krag\App');
         $this->setClassMapping('Krag\DBInterface', 'Krag\DB');
