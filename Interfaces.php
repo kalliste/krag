@@ -74,7 +74,6 @@ interface RoutingInterface
 interface SQLInterface
 {
     public function select(string|array $fields = [], ?string $table = null) : SQLInterface;
-    public function selectAliased(string|array $fields = [], ?string $table = null) : SQLInterface;
     public function from(string $table, ?string $alias = null) : SQLInterface;
     public function left() : SQLInterface;
     public function right() : SQLInterface;

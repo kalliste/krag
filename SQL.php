@@ -6,15 +6,15 @@ class SQL implements SQLInterface
 {
 
     // FIXME: this should be $verb $from $join $where $group $order $limit so we can build out of order
-    private string $query = '';
-    private bool $haveSelect = false;
-    private bool $haveWhere = false;
+    protected string $query = '';
+    protected bool $haveSelect = false;
+    protected bool $haveWhere = false;
 
     public function __construct(private DB $db) {}
 
     /************************************************************************/
 
-    private function fieldValue(string $key, $value, ?string $table = null, string $operator = '=') : string
+    protected function fieldValue(string $key, $value, ?string $table = null, string $operator = '=') : string
     {
         $key = $this->db->columnEscape($key);
         $value = $this->db->escape($value);
@@ -26,7 +26,7 @@ class SQL implements SQLInterface
         return $key.$operator."'".$value."'";
     }
 
-    private function fieldsValues(array $conditions, ?string $table = null, string $operator = '=') : string
+    protected function fieldsValues(array $conditions, ?string $table = null, string $operator = '=') : string
     {
         $ret = '';
         $first = true;
@@ -42,26 +42,9 @@ class SQL implements SQLInterface
         return $ret;
     }
 
-    private function deleteSQL(string $table, array $conditions = []) : string
+    protected function splitByComma(string $str) : array
     {
-        $table = $this->db->tableEscape($table);
-        return 'DELETE FROM '.$table.$this->where($conditions);
-    }
-
-    private function insertSQL(string $table, array $records) : string
-    {
-        $table = $this->db->tableEscape($table);
-        $columns = array_keys(reset($records));
-        $line = 'INSERT INTO '.$table.' ('.$this->db->columnEscape($columns).') VALUES ';
-        $first = true;
-        foreach ($records as $record) {
-            if (!$first) {
-                $line .= ', ';
-            }
-            $first = false;
-            $line .= "('".implode("', '", $this->db->escape($record))."')";
-        }
-        return $line;
+        return array_diff(array_map(trim(...), explode(',', $fields)), ['']);
     }
 
     /************************************************************************/
@@ -73,25 +56,12 @@ class SQL implements SQLInterface
             $ret .= 'SELECT ';
             $this->haveSelect = true;
         }
-        $fields = (is_string($fields)) ? [$fields] : $fields;
-        if (count($fields))
+        $fields = (is_string($fields)) ? $this->splitByComma($fields) : $fields;
+        if (count($fields) && array_is_list($fields))
         {
             $ret .= $this->db->columnEscape($fields, $table).' ';
         }
-        $this->query .= $ret;
-        return $this;
-    }
-
-    // FIXME: Merge with above by using a flag
-    public function selectAliased(string|array $fields = [], ?string $table = null) : SQL
-    {
-        if (!$this->haveSelect)
-        {
-            $ret .= 'SELECT ';
-            $this->haveSelect = true;
-        }
-        $fields = (is_string($fields)) ? [$fields] : $fields;
-        if (count($fields))
+        else
         {
             $fields = array_map($this->db->aliasEscape(...), $fields);
             $first = true;
@@ -330,12 +300,24 @@ class SQL implements SQLInterface
     /************************************************************************/
 
     // FIXME: allow combining these with all applicable SQL part functions above
-    // Probably add a do() function and make the $conditions arguments optional
+    // probably by making them have to be at the end of the chain.
+    // Also be sure to allow INSERT SELECT
 
     public function insert(string $table, array $records) : int
     {
         if (count($records))
         {
+            $table = $this->db->tableEscape($table);
+            $columns = array_keys(reset($records));
+            $query = 'INSERT INTO '.$table.' ('.$this->db->columnEscape($columns).') VALUES ';
+            $first = true;
+            foreach ($records as $record) {
+                if (!$first) {
+                    $query .= ', ';
+                }
+                $first = false;
+                $query .= "('".implode("', '", $this->db->escape($record))."')";
+            }
             $result = $this->db->query($this->insertSQL($table, $records));
             return $this->db->affectedRows($result);
         }
@@ -358,15 +340,17 @@ class SQL implements SQLInterface
 
     public function delete(string $table, array $conditions = []) : int
     {
-        $result = $this->db->query($this->deleteSQL($table, $conditions));
+        $table = $this->db->tableEscape($table);
+        $query = 'DELETE FROM '.$table.$this->where($conditions);
+        $result = $this->db->query($query);
         return $this->db->affectedRows($result);
     }
 
     public function replace(string $table, array $conditions, array $records) : int
     {
         $this->db->begin();
-        $this->db->query($this->deleteSQL($table, $conditions));
-        $result = $this->db->query($this->insertSQL($table, $records));
+        $this->delete($table, $conditions);
+        $result = $this->insert($table, $records);
         $affected = $this->db->affectedRows($result);
         $this->db->commit();
         return $affected;
