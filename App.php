@@ -34,6 +34,19 @@ class App implements AppInterface
         );
     }
 
+    protected function getMethodData(string $controllerName, string $methodName) : mixed
+    {
+        if (!count($this->controllers))
+        {
+            $this->registerController($controllerName);
+        }
+        if ($this->methodRegistered($controllerName, $methodName))
+        {
+            return $this->injection->callMethod($this->controllers[$controllerName], $methodName, $request, $this);
+        }
+        return [];
+    }
+
     public function setGlobalFetcher(string $name, callable $method)
     {
         $this->globalFetchers[$name] = $method;
@@ -44,9 +57,13 @@ class App implements AppInterface
         {
             if (!class_exists($controller))
             {
-                require_once($this->controllerPath.\DIRECTORY_SEPARATOR.$controller.'.php');
+                $fileName = $this->controllerPath.\DIRECTORY_SEPARATOR.$controller.'.php';
+                if (file_exists($fileName))
+                {
+                    require_once($fileName);
+                }
             }
-            $controller = new $controller();
+            $controller = $this->injection->make($controller, [], $this);
         }
         $name = (is_string($name)) ? $name : get_class($controller);
         $this->controllers[$name] = get_class_methods($controller);
@@ -56,26 +73,15 @@ class App implements AppInterface
     {
         $request = $request ?? new Request($_REQUEST, $_SERVER['URI'], $SERVER['SERVER_NAME'], $_GET, $_POST, $_COOKIE);
         $method = $this->routing->methodForRequest($request, $this->controllers);
+        $globalData = $this->processGlobalFetchers($request->request);
         $controllerName = static::class;
-        $methodName = 'notFound';
+        $methodName = (is_string($method)) ? $method : 'notFound';
         $methodData = [];
-        if (is_string($method))
-        {
-            $methodName = $method;
-        }
         if (is_array($method))
         {
             [$controllerName, $methodName] = $method;
-            if (!count($this->controllers))
-            {
-                $this->registerController($controllerName);
-            }
-            if ($this->methodRegistered($controllerName, $methodName))
-            {
-                $methodData = $this->injection->callMethod($controllerName, $methodName, $request, $this);
-            }
+            $methodData = $this->getMethodData($controllerName, $methodName);
         }
-        $globalData = $this->processGlobalFetchers($request->request);
         $this->views->render($controllerName, $methodName, $methodData, $globalData, $this->routing);
     }
 

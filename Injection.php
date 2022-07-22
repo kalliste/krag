@@ -5,12 +5,34 @@ namespace Krag;
 class Injection implements InjectionInterface
 {
 
-    public function __construct(private bool $makeFallbackArguments = false) {}
+    public function __construct(
+        protected array $singletons = [],
+        protected array $classMappings = [],
+        protected bool $makeFallbackArguments = false,
+    ) {
+        if (count($singletons) && array_is_list($singletons))
+        {
+            $this->singletons = array_combine($singletons, array_fill(0, count($singletons), null));
+        }
+        $this->setClassMapping('Krag\AppInterface', 'Krag\App');
+        $this->setClassMapping('Krag\DBInterface', 'Krag\DB');
+        $this->setClassMapping('Krag\InjectionInterface', 'Krag\Injection');
+        $this->setClassMapping('Krag\LogInterface', 'Krag\Log');
+        $this->setClassMapping('Krag\ResultInterface', 'Krag\Result');
+        $this->setClassMapping('Krag\RoutingInterface', 'Krag\Routing');
+        $this->setClassMapping('Krag\SQLInterface', 'Krag\SQL');
+        $this->setClassMapping('Krag\ViewsInterface', 'Krag\Views');
+        $this->setSingleton('Krag\Injection', $this);
+    }
 
-    protected function matchParamToValues(int $position, string $name, array $withValues) : mixed
+    protected function matchParamToValues(int $position, string $name, array|object $withValues) : mixed
     {
         if (count($withValues))
         {
+            if (is_object($withValues))
+            {
+                return $withValues->$name ?? null;
+            }
             if (array_is_list($withValues) && $position < count($withValues))
             {
                 return $withValues[$position];
@@ -39,7 +61,7 @@ class Injection implements InjectionInterface
         return null;
     }
 
-    protected function makeArgumentsForMethod(\ReflectionMethod $rMethod, array $withValues = []) : array
+    protected function makeArgumentsForMethod(\ReflectionMethod $rMethod, array|object $withValues = []) : array
     {
         $passArguments = [];
         $i = 0;
@@ -59,19 +81,41 @@ class Injection implements InjectionInterface
         return $passArguments;
     }
 
-    public function make(string $class, array $withValues = [], object|string|null $whosAsking = null) : ?object
+    public function setSingleton(string $class, ?object $obj = null) : InjectionInterface
     {
+        $this->singletons[$class] = $obj;
+        return $this;
+    }
+
+    public function setClassMapping(string $fromClass, string $toClass) : InjectionInterface
+    {
+        $this->classMappings[$fromClass] = $toClass;
+        return $this;
+    }
+
+    public function make(string $class, array|object $withValues = [], object|string|null $whosAsking = null) : ?object
+    {
+        $class = $this->classMappings[$class] ?? $class;
+        if (array_key_exists($class, $this->singletons) && !is_null($this->singletons[$class]))
+        {
+            return $this->singletons[$class];
+        }
         if (class_exists($class))
         {
             $rClass = new \ReflectionClass($class);
             $rConstructor = $rClass->getConstructor();
             $passArguments = $this->makeArgumentsForMethod($rConstructor, $withValues);
-            return $rClass->newInstanceArgs($passArguments);
+            $obj = $rClass->newInstanceArgs($passArguments);
+            if (array_key_exists($class, $this->singletons))
+            {
+                $this->singletons[$class] = $obj;
+            }
+            return $obj;
         }
         return null;
     }
 
-    public function callMethod(object|string $objectOrMethod, ?string $method = null, array $withValues = [], object|string|null $whosAsking = null) : mixed
+    public function callMethod(object|string $objectOrMethod, ?string $method = null, array|object $withValues = [], object|string|null $whosAsking = null) : mixed
     {
         if (is_null($method))
         {
