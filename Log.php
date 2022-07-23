@@ -2,36 +2,25 @@
 
 namespace Krag;
 
-class Log implements LogInterface, \IteratorAggregate
+class Log implements LogInterface, \Psr\Log\LoggerAwareInterface, \IteratorAggregate
 {
 
     private array $messages = [];
+    public ?\Psr\Log\LoggerInterface $leader = null;
 
     public function __construct(
         public ?string $component = null,
         public LogLevel $minLevel = LogLevel::TRACE,
-        public ?LogInterface $leader = null,
-        public ?InjectionInterface $injection = null,
     ) {}
+
+    public function setLogger(\Psr\Log\LoggerInterface $logger) : void
+    {
+        $this->leader = $logger;
+    }
 
     public function getIterator() : \Traversable
     {
         return new \ArrayIterator($this->messages);
-    }
-
-    public function makeFollower(string $component): Log
-    {
-        if (is_null($this->leader))
-        {
-            return new static($component, $this, $this->minLevel);
-        }
-        return $this->injection->make(static::class,
-            [
-                'component' => $component,
-                'minLevel' => $this->minLevel,
-                'leader' => $this,
-            ]
-        );
     }
 
     public function log(mixed $level, \Stringable|string $message, array $context = [], ?string $component = null) : void
@@ -43,7 +32,14 @@ class Log implements LogInterface, \IteratorAggregate
             $component = (is_string($component)) ? $component : $this->component;
             if (is_object($this->leader))
             {
-                [$this->leader, $level->toString()]($message, $context, $component);
+                if ($this->leader instanceof LogInterface)
+                {
+                    [$this->leader, $level->toString()]($message, $context, $component);
+                }
+                else
+                {
+                    [$this->leader, $level->toPSR()]($message, $context);
+                }
             }
             else
             {
@@ -52,7 +48,7 @@ class Log implements LogInterface, \IteratorAggregate
         }
     }
 
-    public function filter(LogLevel $minLevel = LogLevel::TRACE, ?string $component = null) : array
+    public function filter(LogLevel $minLevel = LogLevel::DEBUG, ?string $component = null) : array
     {
         $ret = [];
         foreach ($this->messages as $message)

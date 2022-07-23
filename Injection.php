@@ -2,14 +2,19 @@
 
 namespace Krag;
 
-class Injection implements InjectionInterface
+class Injection implements InjectionInterface, \Psr\Log\LoggerAwareInterface
 {
+
+    private ?InjectionInterface $leader = null;
+    private WeakMap $loggers;
+    private WeakMap $injectors;
 
     public function __construct(
         protected array $singletons = [],
         protected array $classMappings = [],
-        protected ?InjectionInterface $leader = null,
+        public ?\Psr\Log\LoggerInterface $logger = null,
     ) {
+        $this->loggers = new WeakMap;
         if (count($singletons) && array_is_list($singletons))
         {
             $this->singletons = array_fill_keys($singletons, null);
@@ -23,6 +28,17 @@ class Injection implements InjectionInterface
         $this->setClassMapping('Routing', 'Krag\Routing', 'Krag', true);
         $this->setClassMapping('SQL', 'Krag\SQL', 'Krag', true);
         $this->setClassMapping('Views', 'Krag\Views', 'Krag', true);
+        $this->setClassMapping('\Psr\Log\LoggerInterface', 'Krag\Log');
+    }
+
+    public function setLogger(\Psr\Log\LoggerInterface $logger) : void
+    {
+~       $this->logger = $logger;
+    }
+
+    public function setInjection(InjectionInterface $injection) : void
+    {
+        $this->leader = $injection;
     }
 
     protected function matchParamToValues(int $position, string $name, array|object $withValues) : mixed
@@ -106,6 +122,31 @@ class Injection implements InjectionInterface
         return $ret;
     }
 
+    protected function postMakeNew(string $class, array|object $withValues, object $obj)
+    {
+        if ($obj instanceof \Psr\Log\LoggerAwareInterface)
+        {
+            $logger = $this->make('Log');
+            if ($this->logger && $logger instanceof \Psr\Log\LoggerAwareInterface)
+            {
+                $logger->setLogger($this->logger);
+            }
+            $obj->setLogger($logger);
+        }
+        if (array_key_exists($class, $this->singletons))
+        {
+            $this->singletons[$class] = $obj;
+        }
+    }
+
+    protected function makeNew(string $class, array|object $withValues = []) : ?object
+    {
+        $rClass = new \ReflectionClass($class);
+        $rConstructor = $rClass->getConstructor();
+        $passArguments = $this->makeArgumentsForMethod($rConstructor, $withValues);
+        return $rClass->newInstanceArgs($passArguments);
+    }
+
     public function make(string $class, array|object $withValues = []) : ?object
     {
         if ($this->leader)
@@ -113,20 +154,18 @@ class Injection implements InjectionInterface
             return $this->leader->make($class, $withValues);
         }
         $class = $this->classMappings[$class] ?? $class;
+        if ($class == static::class && $withValues == [])
+        {
+            return $this;
+        }
         if (array_key_exists($class, $this->singletons) && !is_null($this->singletons[$class]))
         {
             return $this->singletons[$class];
         }
         if (class_exists($class))
         {
-            $rClass = new \ReflectionClass($class);
-            $rConstructor = $rClass->getConstructor();
-            $passArguments = $this->makeArgumentsForMethod($rConstructor, $withValues);
-            $obj = $rClass->newInstanceArgs($passArguments);
-            if (array_key_exists($class, $this->singletons))
-            {
-                $this->singletons[$class] = $obj;
-            }
+            $obj = $this->makeNew($class, $withValues);
+            $this->postMakeNew($class, $withValues, $obj);
             return $obj;
         }
         return null;
