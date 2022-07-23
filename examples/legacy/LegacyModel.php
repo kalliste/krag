@@ -2,7 +2,7 @@
 
 namespace Krag;
 
-class LegacyModel extends Model
+class LegacyModel extends StaticModel
 {
 
     public static function values($column, $conditions = [])

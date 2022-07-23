@@ -50,7 +50,7 @@ class App implements AppInterface
 
     protected function defaultRequest() : Request
     {
-        return $this->injection->make('Request',
+        return $this->injection->get('Request',
             [
                 'request' => $_REQUEST,
                 'uri' => $_SERVER['uri'],
@@ -116,7 +116,7 @@ class App implements AppInterface
                     require_once($fileName);
                 }
             }
-            $controller = $this->injection->make($controller);
+            $controller = $this->injection->get($controller);
         }
         $name = (is_string($name)) ? $name : get_class($controller);
         $this->controllers[$name] = get_class_methods($controller);

@@ -2,7 +2,11 @@
 
 namespace Krag;
 
-class Injection implements InjectionInterface, \Psr\Log\LoggerAwareInterface
+use \Psr\Log\LoggerAwareInterface;
+use \Psr\Container\ContainerExceptionInterface;
+use \Psr\Container\NotFoundExceptionInterface;
+
+class Injection implements InjectionInterface, LoggerAwareInterface
 {
 
     private ?InjectionInterface $leader = null;
@@ -63,12 +67,26 @@ class Injection implements InjectionInterface, \Psr\Log\LoggerAwareInterface
         return null;
     }
 
-    protected function makeArgumentForParameter(\ReflectionParameter $rParam) : mixed
+    protected function makeArgumentForParameter(\ReflectionParameter $rParam, array|object $withValues, bool $preferProvided = false) : mixed
     {
         $type = strval($rParam->getType());
-        $arg = ($this instanceof $type) ? $this : null;
-        $arg = $arg ?? $this->matchParamToValues($i, $rParam->getName(), $withValues);
-        $arg = $arg ?? $this->make($type);
+        $arg = null;
+        if ($preferProvided)
+        {
+            $arg = $arg ?? $this->matchParamToValues($i, $rParam->getName(), $withValues);
+        }
+        $arg = $arg ?? (static::class == $type) ? $this : null;
+        try
+        {
+            $arg = $arg ?? $this->get($type);
+        }
+        catch (NotFoundExceptionInterface $e)
+        {
+        }
+        if (!$preferProvided)
+        {
+            $arg = $arg ?? $this->matchParamToValues($i, $rParam->getName(), $withValues);
+        }
         $arg = $arg ?? ($rParam->isOptional()) ? $rParam->getDefaultValue() : null;
         if (!$rParam->isOptional())
         {
@@ -77,13 +95,13 @@ class Injection implements InjectionInterface, \Psr\Log\LoggerAwareInterface
         return $arg;
     }
 
-    protected function makeArgumentsForMethod(\ReflectionMethod $rMethod, array|object $withValues = []) : array
+    protected function makeArgumentsForMethod(\ReflectionMethod $rMethod, array|object $withValues = [], bool $preferProvided = false) : array
     {
         $passArguments = [];
         $i = 0;
         foreach ($rMethod->getParameters() as $rParam)
         {
-            $arg = $this->makeArgumentForParameter($rParam);
+            $arg = $this->makeArgumentForParameter($rParam, $withValues, $preferProvided);
             if (!is_null($arg) || !$rParam->isOptional())
             {
                 $passArguments[$rParam->getName()] = $arg;
@@ -126,7 +144,7 @@ class Injection implements InjectionInterface, \Psr\Log\LoggerAwareInterface
     {
         if ($obj instanceof \Psr\Log\LoggerAwareInterface)
         {
-            $logger = $this->make('Log');
+            $logger = $this->get('Log');
             if ($this->logger && $logger instanceof \Psr\Log\LoggerAwareInterface)
             {
                 $logger->setLogger($this->logger);
@@ -143,18 +161,21 @@ class Injection implements InjectionInterface, \Psr\Log\LoggerAwareInterface
     {
         $rClass = new \ReflectionClass($class);
         $rConstructor = $rClass->getConstructor();
-        $passArguments = $this->makeArgumentsForMethod($rConstructor, $withValues);
+        $passArguments = $this->makeArgumentsForMethod($rConstructor, $withValues, true);
         return $rClass->newInstanceArgs($passArguments);
     }
 
-    public function make(string $class, array|object $withValues = []) : ?object
+    public function get(string $id, array|object $withValues = [])
     {
         if ($this->leader)
         {
-            $result = $this->leader->make($class, $withValues);
-            if (!is_null($result))
+            try
             {
+                $result = $this->leader->make($class, $withValues);
                 return $result;
+            }
+            catch (NotFoundExceptionInterface $e)
+            {
             }
         }
         $class = $this->classMappings[$class] ?? $class;
@@ -172,7 +193,12 @@ class Injection implements InjectionInterface, \Psr\Log\LoggerAwareInterface
             $this->postMakeNew($class, $withValues, $obj);
             return $obj;
         }
-        return null;
+        throw new class('Unable to make: '.$id) extends \InvalidArgumentException implements NotFoundExceptionInterface {};;
+    }
+
+    public function has(string $id) : bool
+    {
+        return array_key_exists($id, $this->classMappings);
     }
 
     public function callMethod(object|string $objectOrMethod, ?string $method = null, array|object $withValues = []) : mixed
@@ -191,7 +217,7 @@ class Injection implements InjectionInterface, \Psr\Log\LoggerAwareInterface
             $rMethod = new \ReflectionMethod($objectOrMethod, $method);
             $toCall = [$objectOrMethod, $method];
         }
-        $arguments = $this->makeArgumentsForMethod($rMethod, $withValues);
+        $arguments = $this->makeArgumentsForMethod($rMethod, $withValues, false);
         return call_user_func_array($toCall, $arguments);
     }
 

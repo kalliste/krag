@@ -31,9 +31,9 @@ interface HTTPInterface
     public function handleResponse(Response $response, ?string $redirectURL = null);
 }
 
-interface InjectionInterface
+interface InjectionInterface extends \Psr\Container\ContainerInterface
 {
-    public function make(string $class, array $withValues = []) : ?object;
+    public function get(string $id, array $withValues = []);
     public function callMethod(object|string $objectOrMethod, ?string $method = null, array $withValues = []) : mixed;
     public function setSingleton(string $class, ?object $obj = null) : InjectionInterface;
     public function setClassMapping(string $fromClass, string $toClass) : InjectionInterface;
@@ -58,17 +58,17 @@ interface LogInterface extends \Psr\Log\LoggerInterface
     public function filter(LogLevel $minLevel = LogLevel::TRACE, ?string $component = null) : array;
 }
 
-interface StaticModelInterface
+interface ModelInterface
 {
-    public static function value(string $column, array $conditions = []) : mixed;
-    public static function list(string $column, array $conditions = []) : array;
-    public static function assoc(int|array $conditions = [], $idColumn = 'id') : array;
-    public static function records(array $conditions = [], ?array $pagingParams = null) : array;
-    public static function map(string $keyColumn, string $valueColumn, array $conditions = [], ?array $pagingParams = null) : array;
-    public static function insert(array $records) : int;
-    public static function update(array $conditions, array $newData) : int;
-    public static function delete(array $conditions = []) : int;
-    public static function replace(array $conditions, array $records) : int;
+    public function value(string $column, array $conditions = []) : mixed;
+    public function list(string $column, array $conditions = []) : array;
+    public function assoc(int|array $conditions = [], $idColumn = 'id') : array;
+    public function records(array $conditions = [], ?array $pagingParams = null) : array;
+    public function map(string $keyColumn, string $valueColumn, array $conditions = [], ?array $pagingParams = null) : array;
+    public function insert(array $records) : int;
+    public function update(array $conditions, array $newData) : int;
+    public function delete(array $conditions = []) : int;
+    public function replace(array $conditions, array $records) : int;
 }
 
 interface ResultInterface

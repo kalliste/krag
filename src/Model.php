@@ -2,76 +2,61 @@
 
 namespace Krag;
 
-class Model implements StaticModelInterface
+class Model implements ModelInterface
 {
 
-    protected static ?InjectionInterface $injection = null;
-    protected static ?string $table = null;
-
-    public static function getInjection(InjectionInterface $injection)
+    public function __construct(private SQLInterface $sql, private ?string $table = null)
     {
-        return static::$injection;
+        if (!$table)
+        {
+            $this->table = strtolower(static::class);
+        }
     }
 
-    public static function setInjection(InjectionInterface $injection)
+    public function value(string $column, array $conditions = []) : mixed
     {
-        static::$injection = $injection;
+        return $this->sql->select($column)->from($this->table)->where($conditions)->value();
     }
 
-    protected function sql() : SQLInterface
+    public function list(string $column, array $conditions = []) : array
     {
-        return static::injection->make('SQLInterface');
+        return $this->sql->select($column)->from($this->table)->where($conditions)->list();
     }
 
-    protected function table() : string
-    {
-       return static::$table ?? strtolower(static::class);
-    }
-
-    public static function value(string $column, array $conditions = []) : mixed
-    {
-        return static::sql()->select($column)->from(static::table())->where($conditions)->value();
-    }
-
-    public static function list(string $column, array $conditions = []) : array
-    {
-        return static::sql()->select($column)->from(static::table())->where($conditions)->list();
-    }
-
-    public static function assoc(int|array $conditions = [], $idColumn = 'id') : array
+    public function assoc(int|array $conditions = [], $idColumn = 'id') : array
     {
         $conditions = (is_int($conditions)) ? [$idColumn => $conditions] : $conditions;
-        return static::sql()->select()->from(static::table())->where($conditions)->list();
+        return $this->sql->select()->from($this->table)->where($conditions)->list();
     }
 
-    public static function records(array $conditions = [], ?array $pagingParams = null) : array
+    public function records(array $conditions = [], ?array $pagingParams = null) : array
     {
-        return static::sql()->select()->from(static::table())->where($conditions)->orderLimit($pagingParams)->assocList();
+        return $this->sql->select()->from($this->table)->where($conditions)->orderLimit($pagingParams)->assocList();
     }
 
-    public static function map(string $keyColumn, string $valueColumn, array $conditions = [], ?array $pagingParams = null) : array
+    public function map(string $keyColumn, string $valueColumn, array $conditions = [], ?array $pagingParams = null) : array
     {
-        return static::sql()->select([$keyColumn, $valueColumn])->from(static::table())->where($conditions)->orderLimit($pagingParams)->map();
+        return $this->sql->select([$keyColumn, $valueColumn])->from($this->table)->where($conditions)->orderLimit($pagingParams)->map();
     }
 
-    public static function insert(array $records) : int
+    public function insert(array $records) : int
     {
-        return static::sql()->insert(static::table(), $records);
+        return $this->sql->insert($this->table, $records);
     }
 
-    public static function update(array $conditions, array $newData) : int
+    public function update(array $conditions, array $newData) : int
     {
-        return static::sql()->update(static::table(), $conditions, $newData);
+        return $this->sql->update($this->table, $conditions, $newData);
     }
 
-    public static function delete(array $conditions = []) : int
+    public function delete(array $conditions = []) : int
     {
-        return static::sql()->delete(static::table(), $conditions);
+        return $this->sql->delete($this->table, $conditions);
     }
 
-    public static function replace(array $conditions, array $records) : int
+    public function replace(array $conditions, array $records) : int
     {
-        return static::sql()->replace(static::table(), $conditions, $records);
+        return $this->sql->replace($this->table, $conditions, $records);
     }
 
 }
