@@ -33,7 +33,7 @@ class Injection implements InjectionInterface, \Psr\Log\LoggerAwareInterface
 
     public function setLogger(\Psr\Log\LoggerInterface $logger) : void
     {
-~       $this->logger = $logger;
+        $this->logger = $logger;
     }
 
     public function setInjection(InjectionInterface $injection) : void
@@ -151,7 +151,11 @@ class Injection implements InjectionInterface, \Psr\Log\LoggerAwareInterface
     {
         if ($this->leader)
         {
-            return $this->leader->make($class, $withValues);
+            $result = $this->leader->make($class, $withValues);
+            if (!is_null($result))
+            {
+                return $result;
+            }
         }
         $class = $this->classMappings[$class] ?? $class;
         if ($class == static::class && $withValues == [])
