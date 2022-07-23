@@ -48,6 +48,56 @@ class App implements AppInterface
         return [];
     }
 
+    protected function defaultRequest() : Request
+    {
+        return $this->injection->make('Request',
+            [
+                'request' => $_REQUEST,
+                'uri' => $_SERVER['uri'],
+                'serverName' => $_SERVER['SERVER_NAME'],
+                'get' => $_GET,
+                'post' => $_POST,
+                'cookies' => $_COOKIE,
+            ]
+        );
+    }
+
+    protected function requestIn(Request $request) : array
+    {
+        $method = $this->routing->methodForRequest($request, $this->controllers);
+        $globalData = $this->processGlobalFetchers($request->request);
+        if (is_array($method))
+        {
+            [$controllerName, $methodName] = $method;
+            $response = $this->getMethodData($controllerName, $methodName);
+        }
+        else
+        {
+            $controllerName = static::class;
+            $methodName = (is_string($method)) ? $method : 'notFound';
+            $response = [];
+        }
+        return [$response, $controllerName, $methodName];
+    }
+
+    protected function responseOut(mixed $response, string $controllerName, string $methodName)
+    {
+        if ($response instanceof Response)
+        {
+            $redirectURL = null;
+            if ($response->isRedirect)
+            {
+                $redirectURL = $this->routing->makeLink($controllerName, $methodName, $request['uri'], $response->data);
+            }
+            $http->handleResponse($response, $redirectURL);
+        }
+        if (is_array($response) || ($response instanceof Response && !$response->isRedirect))
+        {
+            $methodData = is_array($response) ? $response : $response->data;
+            $this->views->render($controllerName, $methodName, $methodData, $globalData, $this->routing);
+        }
+    }
+
     public function setGlobalFetcher(string $name, callable $method) : App
     {
         $this->globalFetchers[$name] = $method;
@@ -75,43 +125,9 @@ class App implements AppInterface
 
     public function run(?Request $request = null)
     {
-        if (is_null($request))
-        {
-            $request = $this->injection->make('Request',
-                [
-                    'request' => $_REQUEST,
-                    'uri' => $_SERVER['uri'],
-                    'serverName' => $_SERVER['SERVER_NAME'],
-                    'get' => $_GET,
-                    'post' => $_POST,
-                    'cookies' => $_COOKIE,
-                ]
-            );
-        }
-        $method = $this->routing->methodForRequest($request, $this->controllers);
-        $globalData = $this->processGlobalFetchers($request->request);
-        $controllerName = static::class;
-        $methodName = (is_string($method)) ? $method : 'notFound';
-        $response = [];
-        if (is_array($method))
-        {
-            [$controllerName, $methodName] = $method;
-            $response = $this->getMethodData($controllerName, $methodName);
-        }
-        if ($response instanceof Response)
-        {
-            $redirectURL = null;
-            if ($response->isRedirect)
-            {
-                $redirectURL = $this->routing->makeLink($controllerName, $methodName, $request['uri'], $response->data);
-            }
-            $http->handleResponse($response, $redirectURL);
-        }
-        if (is_array($response) || ($response instanceof Response && !$response->isRedirect))
-        {
-            $methodData = is_array($response) ? $response : $response->data;
-            $this->views->render($controllerName, $methodName, $methodData, $globalData, $this->routing);
-        }
+        $request = (is_null($request)) ? $this->defaultRequest : $request;
+        [$response, $controllerName, $methodName] = $this->requestIn($request);
+        responseOut($response, $controllerName, $methodName);
     }
 
 }

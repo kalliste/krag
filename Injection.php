@@ -17,6 +17,7 @@ class Injection implements InjectionInterface
         }
         $this->setClassMapping('App', 'Krag\App', 'Krag', true);
         $this->setClassMapping('DB', 'Krag\DB', 'Krag', true);
+        $this->setClassMapping('HTTP', 'Krag\HTTP', 'Krag', true);
         $this->setClassMapping('Injection', 'Krag\Injection', 'Krag', true);
         $this->setClassMapping('Log', 'Krag\Log', 'Krag', true);
         $this->setClassMapping('Result', 'Krag\Result', 'Krag', true);
