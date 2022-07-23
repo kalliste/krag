@@ -8,7 +8,6 @@ class Injection implements InjectionInterface
     public function __construct(
         protected array $singletons = [],
         protected array $classMappings = [],
-        protected bool $makeFallbackArguments = false,
         protected ?InjectionInterface $leader = null,
     ) {
         if (count($singletons) && array_is_list($singletons))
@@ -45,17 +44,6 @@ class Injection implements InjectionInterface
 
     protected function makeArgumentFallback(\ReflectionMethod $rMethod, \ReflectionParameter $rParam) : mixed
     {
-        if ($this->makeFallbackArguments)
-        {
-            return match ($param->getType())
-            {
-                '' => '',
-                'string' => '',
-                'int' => 0,
-                'float' => 0.0,
-                'bool' => false,
-            };
-        }
         return null;
     }
 
