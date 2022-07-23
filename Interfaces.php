@@ -39,16 +39,19 @@ interface InjectionInterface
     public function setClassMapping(string $fromClass, string $toClass) : InjectionInterface;
 }
 
-interface LogInterface
+interface LogInterface extends \Psr\Log\LoggerInterface
 {
-    public function trace(string $message, array $data = [], ?string $module = null) : LogInterface;
-    public function debug(string $message, array $data = [], ?string $module = null) : LogInterface;
-    public function info(string $message, array $data = [], ?string $module = null) : LogInterface;
-    public function warn(string $message, array $data = [], ?string $module = null) : LogInterface;
-    public function error(string $message, array $data = [], ?string $module = null) : LogInterface;
-    public function fatal(string $message, array $data = [], ?string $module = null) : LogInterface;
-    public function filter(LogLevel $minLevel = LogLevel::TRACE, ?string $module = null) : array;
-    public function makeFollower(string $module): LogInterface;
+    public function trace(\Stringable|string $message, array $data = [], ?string $component = null) : void;
+    public function debug(\Stringable|string $message, array $data = [], ?string $component = null) : void;
+    public function info(\Stringable|string $message, array $data = [], ?string $component = null) : void;
+    public function warning(\Stringable|string $message, array $data = [], ?string $component = null) : void;
+    public function error(\Stringable|string $message, array $data = [], ?string $component = null) : void;
+    public function critical(\Stringable|string $message, array $data = [], ?string $component = null) : void;
+    public function alert(\Stringable|string $message, array $data = [], ?string $component = null) : void;
+    public function emergency(\Stringable|string $message, array $data = [], ?string $component = null) : void;
+    public function log(mixed $level, \Stringable|string $message, array $context = [], ?string $component = null) : void;
+    public function filter(LogLevel $minLevel = LogLevel::TRACE, ?string $component = null) : array;
+    public function makeFollower(string $component): LogInterface;
 }
 
 interface StaticModelInterface
