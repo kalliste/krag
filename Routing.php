@@ -32,7 +32,7 @@ class Routing implements RoutingInterface
             $target = array_slice($target, 1);
         }
         $ret = (count($source)) ? str_repeat('../', count($source)) : '';
-        $ret .= implode('/', $target);
+        $ret .= implode('/', $target).'/';
         $ret .= (count($data)) ? '?'.http_build_query($data) : '';
         return $ret;
     }
