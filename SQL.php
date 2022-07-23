@@ -310,6 +310,7 @@ class SQL implements SQLInterface
     {
         if (count($records))
         {
+            $records = (is_array(reset($records))) ? $records : [$records];
             $table = $this->db->tableEscape($table);
             $columns = array_keys(reset($records));
             $query = 'INSERT INTO '.$table.' ('.$this->db->columnEscape($columns).') VALUES ';
