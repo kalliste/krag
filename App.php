@@ -92,18 +92,24 @@ class App implements AppInterface
         $globalData = $this->processGlobalFetchers($request->request);
         $controllerName = static::class;
         $methodName = (is_string($method)) ? $method : 'notFound';
-        $methodData = [];
+        $response = [];
         if (is_array($method))
         {
             [$controllerName, $methodName] = $method;
-            $methodData = $this->getMethodData($controllerName, $methodName);
+            $response = $this->getMethodData($controllerName, $methodName);
         }
-        if ($methodData instanceof Response)
+        if ($response instanceof Response)
         {
-            $http->handleResponse($methodData);
+            $redirectURL = null;
+            if ($response->isRedirect)
+            {
+                $redirectURL = $this->routing->makeLink($controllerName, $methodName, $request['uri'], $response->data);
+            }
+            $http->handleResponse($response, $redirectURL);
         }
-        if (is_array($methodData) || ($methodData instanceof Response && !$methodData->isRedirect))
+        if (is_array($response) || ($response instanceof Response && !$response->isRedirect))
         {
+            $methodData = is_array($response) ? $response : $response->data;
             $this->views->render($controllerName, $methodName, $methodData, $globalData, $this->routing);
         }
     }

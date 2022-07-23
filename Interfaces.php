@@ -28,7 +28,7 @@ interface DBInterface
 
 interface HTTPInterface
 {
-    public function handleResponse(Response $response);
+    public function handleResponse(Response $response, ?string $redirectURL = null);
 }
 
 interface InjectionInterface
