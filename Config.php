@@ -2,7 +2,7 @@
 
 namespace Krag;
 
-class Config
+class Config extends \stdClass
 {
 
     public function __construct(array $defaultSettings = [], private string $configFile = 'config.php')
