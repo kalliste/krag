@@ -3,7 +3,8 @@
 use Krag\Injection;
 
 $k = new Injection(singletons: ['Krag\Config', 'PDO']);
-$k->make('PDO', $k->make('Config'));
+$config = $k->make('Config', ['configFile' => 'config.example.php'])
+$k->make('PDO', ['dsn' => $config->dsn, 'username' => $config->dbUsername, 'password' => $config->dbPassword]);
 $k->make('App')->run();
 
 ?>
