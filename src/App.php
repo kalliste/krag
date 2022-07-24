@@ -2,11 +2,10 @@
 
 namespace Krag;
 
-use \Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 class App implements AppInterface
 {
-
     protected array $controllers = [];
 
     public function __construct(
@@ -16,16 +15,16 @@ class App implements AppInterface
         protected HTTPInterface $http,
         protected string $controllerPath = 'controllers',
         protected array $globalFetchers = [],
-    ) {}
+    ) {
+    }
 
-    protected function processGlobalFetchers(ServerRequestInterface $request) : array
+    protected function processGlobalFetchers(ServerRequestInterface $request): array
     {
         $requestData = array_merge($request->getQueryParams(), $request->getParsedBody());
         return array_combine(
             array_keys($this->globalFetchers),
             array_map(
-                function($method)
-                {
+                function ($method) {
                     return $this->injection->callMethod($method, withValues: $requestData);
                 },
                 $this->globalFetchers
@@ -33,7 +32,7 @@ class App implements AppInterface
         );
     }
 
-    protected function methodRegistered($controllerName, $methodName) : bool
+    protected function methodRegistered($controllerName, $methodName): bool
     {
         return (
             array_key_exists($controllerName, $this->controllers) &&
@@ -41,31 +40,26 @@ class App implements AppInterface
         );
     }
 
-    protected function getMethodData(string $controllerName, string $methodName, ServerRequestInterface $request) : mixed
+    protected function getMethodData(string $controllerName, string $methodName, ServerRequestInterface $request): mixed
     {
-        if (!count($this->controllers))
-        {
+        if (!count($this->controllers)) {
             $this->registerController($controllerName);
         }
-        if ($this->methodRegistered($controllerName, $methodName))
-        {
+        if ($this->methodRegistered($controllerName, $methodName)) {
             $requestData = array_merge($request->getQueryParams(), $request->getParsedBody());
             return $this->injection->callMethod($this->controllers[$controllerName], $methodName, $requestData);
         }
         return [];
     }
 
-    protected function requestIn(ServerRequestInterface $request) : array
+    protected function requestIn(ServerRequestInterface $request): array
     {
         $method = $this->routing->methodForRequest($request, $this->controllers);
         $globalData = $this->processGlobalFetchers($request);
-        if (is_array($method))
-        {
+        if (is_array($method)) {
             [$controllerName, $methodName] = $method;
             $response = $this->getMethodData($controllerName, $methodName);
-        }
-        else
-        {
+        } else {
             $controllerName = static::class;
             $methodName = (is_string($method)) ? $method : 'notFound';
             $response = [];
@@ -75,37 +69,31 @@ class App implements AppInterface
 
     protected function responseOut(mixed $response, string $controllerName, string $methodName, array $globalData)
     {
-        if ($response instanceof Response)
-        {
+        if ($response instanceof Response) {
             $redirectURL = null;
-            if ($response->isRedirect)
-            {
+            if ($response->isRedirect) {
                 $redirectURL = $this->routing->makeLink($controllerName, $methodName, $request['uri'], $response->data);
             }
             $http->handleResponse($response, $redirectURL);
         }
-        if (is_array($response) || ($response instanceof Response && !$response->isRedirect))
-        {
+        if (is_array($response) || ($response instanceof Response && !$response->isRedirect)) {
             $methodData = is_array($response) ? $response : $response->data;
             $this->views->render($controllerName, $methodName, $methodData, $globalData, $this->routing);
         }
     }
 
-    public function setGlobalFetcher(string $name, callable $method) : App
+    public function setGlobalFetcher(string $name, callable $method): App
     {
         $this->globalFetchers[$name] = $method;
         return $this;
     }
 
-    public function registerController(string|object $controller, ?string $name = null) : App
+    public function registerController(string|object $controller, ?string $name = null): App
     {
-        if (is_string($controller))
-        {
-            if (!class_exists($controller))
-            {
+        if (is_string($controller)) {
+            if (!class_exists($controller)) {
                 $fileName = $this->controllerPath.\DIRECTORY_SEPARATOR.$controller.'.php';
-                if (file_exists($fileName))
-                {
+                if (file_exists($fileName)) {
                     require_once($fileName);
                 }
             }
@@ -123,7 +111,4 @@ class App implements AppInterface
         [$response, $controllerName, $methodName, $globalData] = $this->requestIn($request);
         $this->responseOut($response, $controllerName, $methodName, $globalData);
     }
-
 }
-
-?>

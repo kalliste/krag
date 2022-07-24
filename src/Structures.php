@@ -4,7 +4,6 @@ namespace Krag;
 
 enum LogLevel: int
 {
-
     case TRACE = 10;
     case DEBUG = 20;
     case INFO = 30;
@@ -15,10 +14,9 @@ enum LogLevel: int
     case ALERT = 80;
     case EMERGENCY = 90;
 
-    public static function fromString(string $str) : LogLevel
+    public static function fromString(string $str): LogLevel
     {
-        return match($str)
-        {
+        return match ($str) {
             'trace'     => LogLevel::TRACE,
             'debug'     => LogLevel::DEBUG,
             'info'      => LogLevel::INFO,
@@ -31,10 +29,9 @@ enum LogLevel: int
         };
     }
 
-    public function toString() : string
+    public function toString(): string
     {
-        return match($this)
-        {
+        return match ($this) {
             LogLevel::TRACE     => 'trace',
             LogLevel::DEBUG     => 'debug',
             LogLevel::INFO      => 'info',
@@ -47,10 +44,9 @@ enum LogLevel: int
         };
     }
 
-    public function toPSR() : string
+    public function toPSR(): string
     {
-        return match($this)
-        {
+        return match ($this) {
             LogLevel::TRACE     => \Psr\Log\LogLevel::DEBUG,
             LogLevel::DEBUG     => \Psr\Log\LogLevel::DEBUG,
             LogLevel::INFO      => \Psr\Log\LogLevel::INFO,
@@ -62,12 +58,10 @@ enum LogLevel: int
             LogLevel::EMERGENCY => \Psr\Log\LogLevel::EMERGENCY,
         };
     }
-
 }
 
 class LogEntry
 {
-
     public int $time;
 
     public function __construct(
@@ -76,11 +70,9 @@ class LogEntry
         public array $context = [],
         public ?string $component = null,
         ?int $time = null,
-    )
-    {
+    ) {
         $this->time = (is_null($time)) ? time() : $time;
     }
-
 }
 
 class Response
@@ -91,7 +83,6 @@ class Response
         public $headers = [],
         bool $isRedirect = false,
         mixed $redirectMethod = null,
-    ) {}
+    ) {
+    }
 }
-
-?>

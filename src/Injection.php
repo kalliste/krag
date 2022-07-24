@@ -2,13 +2,12 @@
 
 namespace Krag;
 
-use \Psr\Log\LoggerAwareInterface;
-use \Psr\Container\ContainerExceptionInterface;
-use \Psr\Container\NotFoundExceptionInterface;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 class Injection implements InjectionInterface, LoggerAwareInterface
 {
-
     private ?InjectionInterface $leader = null;
 
     public function __construct(
@@ -16,8 +15,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         protected array $classMappings = [],
         public ?\Psr\Log\LoggerInterface $logger = null,
     ) {
-        if (count($singletons) && array_is_list($singletons))
-        {
+        if (count($singletons) && array_is_list($singletons)) {
             $this->singletons = array_fill_keys($singletons, null);
         }
         $this->setClassMapping('Request', 'Krag\Request', 'Krag');
@@ -35,34 +33,31 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         $this->setClassMapping('\Psr\Log\LoggerInterface', 'Krag\Log');
     }
 
-    public function setLogger(\Psr\Log\LoggerInterface $logger) : void
+    public function setLogger(\Psr\Log\LoggerInterface $logger): void
     {
         $this->logger = $logger;
     }
 
-    public function setInjection(InjectionInterface $injection) : void
+    public function setInjection(InjectionInterface $injection): void
     {
         $this->leader = $injection;
     }
 
-    protected function matchParamToValues(int $position, string $name, array|object $withValues) : mixed
+    protected function matchParamToValues(int $position, string $name, array|object $withValues): mixed
     {
-        if (is_object($withValues))
-        {
+        if (is_object($withValues)) {
             return $withValues->$name ?? null;
         }
-        if (array_is_list($withValues) && $position < count($withValues))
-        {
+        if (array_is_list($withValues) && $position < count($withValues)) {
             return $withValues[$position];
         }
-        if (array_key_exists($name, $withValues))
-        {
+        if (array_key_exists($name, $withValues)) {
             return $withValues[$name];
         }
         return null;
     }
 
-    protected function makeArgumentFallback(\ReflectionParameter $rParam) : mixed
+    protected function makeArgumentFallback(\ReflectionParameter $rParam): mixed
     {
         return null;
     }
@@ -72,29 +67,23 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         int $position,
         array|object $withValues,
         bool $preferProvided = false,
-    ) : mixed {
+    ): mixed {
         $type = strval($rParam->getType());
         $name = $rParam->getName();
         $arg = null;
-        if ($preferProvided)
-        {
+        if ($preferProvided) {
             $arg = $arg ?? $this->matchParamToValues($position, $name, $withValues);
         }
         $arg = $arg ?? ((static::class == $type) ? $this : null);
-        try
-        {
+        try {
             $arg = $arg ?? $this->get($type);
+        } catch (NotFoundExceptionInterface $e) {
         }
-        catch (NotFoundExceptionInterface $e)
-        {
-        }
-        if (!$preferProvided)
-        {
+        if (!$preferProvided) {
             $arg = $arg ?? $this->matchParamToValues($position, $name, $withValues);
         }
         $arg = $arg ?? (($rParam->isOptional()) ? $rParam->getDefaultValue() : null);
-        if (!$rParam->isOptional())
-        {
+        if (!$rParam->isOptional()) {
             $arg = $arg ?? $this->makeArgumentFallback($rParam);
         }
         return $arg;
@@ -104,14 +93,12 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         \ReflectionMethod $rMethod,
         array|object $withValues = [],
         bool $preferProvided = false,
-    ) : array {
+    ): array {
         $passArguments = [];
         $i = 0;
-        foreach ($rMethod->getParameters() as $rParam)
-        {
+        foreach ($rMethod->getParameters() as $rParam) {
             $arg = $this->makeArgumentForParameter($rParam, $i, $withValues, $preferProvided);
-            if (!is_null($arg) || !$rParam->isOptional())
-            {
+            if (!is_null($arg) || !$rParam->isOptional()) {
                 $passArguments[$rParam->getName()] = $arg;
             }
             $i++;
@@ -119,7 +106,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return $passArguments;
     }
 
-    public function setSingleton(string $class, ?object $obj = null) : InjectionInterface
+    public function setSingleton(string $class, ?object $obj = null): InjectionInterface
     {
         $this->singletons[$class] = $obj;
         return $this;
@@ -130,23 +117,18 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         ?string $toClass = null,
         ?string $andNamespace = null,
         string|bool $andInterface = false,
-    ) : InjectionInterface {
+    ): InjectionInterface {
         $toClass = $toClass ?? $fromClass;
         $this->classMappings[$fromClass] = $toClass;
         $andInterface = (is_bool($andInterface)) ? 'Interface' : $andInterface;
-        if (is_null($andNamespace))
-        {
-            if ($andInterface)
-            {
+        if (is_null($andNamespace)) {
+            if ($andInterface) {
                 $this->classMappings[$fromClass.'Interface'] = $toClass;
             }
-        }
-        else
-        {
+        } else {
             $namespace = rtrim($andNamespace, '\\').'\\';
             $this->classMappings[$namespace.$fromClass] = $toClass;
-            if ($andInterface)
-            {
+            if ($andInterface) {
                 $this->classMappings[$namespace.$fromClass.'Interface'] = $toClass;
             }
         }
@@ -155,22 +137,19 @@ class Injection implements InjectionInterface, LoggerAwareInterface
 
     protected function postMakeNew(string $class, array|object $withValues, object $obj)
     {
-        if ($obj instanceof \Psr\Log\LoggerAwareInterface)
-        {
+        if ($obj instanceof \Psr\Log\LoggerAwareInterface) {
             $logger = $this->get('Log');
-            if ($this->logger && $logger instanceof \Psr\Log\LoggerAwareInterface)
-            {
+            if ($this->logger && $logger instanceof \Psr\Log\LoggerAwareInterface) {
                 $logger->setLogger($this->logger);
             }
             $obj->setLogger($logger);
         }
-        if (array_key_exists($class, $this->singletons))
-        {
+        if (array_key_exists($class, $this->singletons)) {
             $this->singletons[$class] = $obj;
         }
     }
 
-    protected function makeNew(string $class, array|object $withValues = []) : ?object
+    protected function makeNew(string $class, array|object $withValues = []): ?object
     {
         $rClass = new \ReflectionClass($class);
         $rConstructor = $rClass->getConstructor();
@@ -180,36 +159,29 @@ class Injection implements InjectionInterface, LoggerAwareInterface
 
     public function get(string $id, array|object $withValues = [])
     {
-        if ($this->leader)
-        {
-            try
-            {
+        if ($this->leader) {
+            try {
                 $result = $this->leader->get($id, $withValues);
                 return $result;
-            }
-            catch (NotFoundExceptionInterface $e)
-            {
+            } catch (NotFoundExceptionInterface $e) {
             }
         }
         $class = $this->classMappings[$id] ?? $id;
-        if ($class == static::class && $withValues == [])
-        {
+        if ($class == static::class && $withValues == []) {
             return $this;
         }
-        if (array_key_exists($class, $this->singletons) && !is_null($this->singletons[$class]))
-        {
+        if (array_key_exists($class, $this->singletons) && !is_null($this->singletons[$class])) {
             return $this->singletons[$class];
         }
-        if (class_exists($class))
-        {
+        if (class_exists($class)) {
             $obj = $this->makeNew($class, $withValues);
             $this->postMakeNew($class, $withValues, $obj);
             return $obj;
         }
-        throw new class('Unable to make: '.$id) extends \InvalidArgumentException implements NotFoundExceptionInterface {};
+        throw new class ('Unable to make: '.$id) extends \InvalidArgumentException implements NotFoundExceptionInterface {};
     }
 
-    public function has(string $id) : bool
+    public function has(string $id): bool
     {
         return array_key_exists($id, $this->classMappings);
     }
@@ -218,25 +190,18 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         object|string $objectOrMethod,
         ?string $method = null,
         array|object $withValues = [],
-    ) : mixed {
-        if ($this->leader)
-        {
+    ): mixed {
+        if ($this->leader) {
             return $this->leader->callMethod($objectOrMethod, $method, $withValues);
         }
-        if (is_null($method))
-        {
+        if (is_null($method)) {
             $rMethod = new \ReflectionMethod($objectOrMethod);
             $toCall = $objectOrMethod;
-        }
-        else
-        {
+        } else {
             $rMethod = new \ReflectionMethod($objectOrMethod, $method);
             $toCall = [$objectOrMethod, $method];
         }
         $arguments = $this->makeArgumentsForMethod($rMethod, $withValues, false);
         return call_user_func_array($toCall, $arguments);
     }
-
 }
-
-?>
