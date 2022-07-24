@@ -45,7 +45,7 @@ interface HTTPInterface
 interface InjectionInterface extends ContainerInterface
 {
     public function get(string $id, array $withValues = []);
-    public function callMethod(object|string $objectOrMethod, ?string $method = null, array $withValues = []): mixed;
+    public function call(callable $method, array $withValues = []): mixed;
     public function setSingleton(string $class, ?object $obj = null): InjectionInterface;
     public function setClassMapping(string $fromClass, string $toClass): InjectionInterface;
 }

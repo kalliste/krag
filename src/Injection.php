@@ -18,6 +18,11 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         if (count($singletons) && array_is_list($singletons)) {
             $this->singletons = array_fill_keys($singletons, null);
         }
+        $this->setDefaultClassMappings();
+    }
+
+    protected function setDefaultClassMappings()
+    {
         $this->setClassMapping('Request', 'Krag\Request', 'Krag');
         $this->setClassMapping('Response', 'Krag\Response', 'Krag');
         $this->setClassMapping('LogEntry', 'Krag\LogEntry', 'Krag');
@@ -41,6 +46,35 @@ class Injection implements InjectionInterface, LoggerAwareInterface
     public function setInjection(InjectionInterface $injection): void
     {
         $this->leader = $injection;
+    }
+
+    public function setSingleton(string $class, ?object $obj = null): InjectionInterface
+    {
+        $this->singletons[$class] = $obj;
+        return $this;
+    }
+
+    public function setClassMapping(
+        string $fromClass,
+        ?string $toClass = null,
+        ?string $andNamespace = null,
+        string|bool $andInterface = false,
+    ): InjectionInterface {
+        $toClass = $toClass ?? $fromClass;
+        $this->classMappings[$fromClass] = $toClass;
+        $andInterface = (is_bool($andInterface)) ? 'Interface' : $andInterface;
+        if (is_null($andNamespace)) {
+            if ($andInterface) {
+                $this->classMappings[$fromClass.'Interface'] = $toClass;
+            }
+        } else {
+            $namespace = rtrim($andNamespace, '\\').'\\';
+            $this->classMappings[$namespace.$fromClass] = $toClass;
+            if ($andInterface) {
+                $this->classMappings[$namespace.$fromClass.'Interface'] = $toClass;
+            }
+        }
+        return $this;
     }
 
     protected function matchParamToValues(int $position, string $name, array|object $withValues): mixed
@@ -106,35 +140,6 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return $passArguments;
     }
 
-    public function setSingleton(string $class, ?object $obj = null): InjectionInterface
-    {
-        $this->singletons[$class] = $obj;
-        return $this;
-    }
-
-    public function setClassMapping(
-        string $fromClass,
-        ?string $toClass = null,
-        ?string $andNamespace = null,
-        string|bool $andInterface = false,
-    ): InjectionInterface {
-        $toClass = $toClass ?? $fromClass;
-        $this->classMappings[$fromClass] = $toClass;
-        $andInterface = (is_bool($andInterface)) ? 'Interface' : $andInterface;
-        if (is_null($andNamespace)) {
-            if ($andInterface) {
-                $this->classMappings[$fromClass.'Interface'] = $toClass;
-            }
-        } else {
-            $namespace = rtrim($andNamespace, '\\').'\\';
-            $this->classMappings[$namespace.$fromClass] = $toClass;
-            if ($andInterface) {
-                $this->classMappings[$namespace.$fromClass.'Interface'] = $toClass;
-            }
-        }
-        return $this;
-    }
-
     protected function postMakeNew(string $class, array|object $withValues, object $obj)
     {
         if ($obj instanceof \Psr\Log\LoggerAwareInterface) {
@@ -186,22 +191,10 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return array_key_exists($id, $this->classMappings);
     }
 
-    public function callMethod(
-        object|string $objectOrMethod,
-        ?string $method = null,
-        array|object $withValues = [],
-    ): mixed {
-        if ($this->leader) {
-            return $this->leader->callMethod($objectOrMethod, $method, $withValues);
-        }
-        if (is_null($method)) {
-            $rMethod = new \ReflectionMethod($objectOrMethod);
-            $toCall = $objectOrMethod;
-        } else {
-            $rMethod = new \ReflectionMethod($objectOrMethod, $method);
-            $toCall = [$objectOrMethod, $method];
-        }
+    public function call(callable $method, array|object $withValues = []): mixed
+    {
+        $rMethod = new \ReflectionMethod($method);
         $arguments = $this->makeArgumentsForMethod($rMethod, $withValues, false);
-        return call_user_func_array($toCall, $arguments);
+        return call_user_func_array($method, $arguments);
     }
 }
