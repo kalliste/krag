@@ -1,13 +1,22 @@
 <?php
 
+
+/*
 $dbUsername = 'YOURDATABASEUSER';
 $dbPassword = 'YOURDATABASEPASS';
 $dbName = 'YOURDATABASENAME';
 
 $dbType = 'mysql';
-$hostname = 'localhost';
+$dbHost = 'localhost';
+*/
 
-$dsn = "$dbType:host=$hostname;dbnane=$dbName";
-$dsn = "sqlite:"
+$dbUsername = '';
+$dbPassword = '';
+$dbName = '';
+
+$dbType = 'sqlite';
+$dbHost = 'example.db';
+
+
 
 ?>

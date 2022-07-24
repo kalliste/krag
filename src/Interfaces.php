@@ -50,11 +50,6 @@ interface InjectionInterface extends ContainerInterface
     public function setClassMapping(string $fromClass, string $toClass): InjectionInterface;
 }
 
-interface InjectionAwareInterface
-{
-    public function setInjection(InjectionInterface $injection): void;
-}
-
 interface LogInterface extends \Psr\Log\LoggerInterface
 {
     public function trace(\Stringable|string $message, array $data = [], ?string $component = null): void;

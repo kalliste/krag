@@ -9,16 +9,18 @@ use Psr\Container\NotFoundExceptionInterface;
 class Injection implements InjectionInterface, LoggerAwareInterface
 {
     private ?InjectionInterface $leader = null;
+    public \Psr\Log\LoggerInterface $logger;
 
     public function __construct(
         protected array $singletons = [],
         protected array $classMappings = [],
-        public ?\Psr\Log\LoggerInterface $logger = null,
+        ?\Psr\Log\LoggerInterface $logger = null,
     ) {
         if (count($singletons) && array_is_list($singletons)) {
             $this->singletons = array_fill_keys($singletons, null);
         }
         $this->setDefaultClassMappings();
+        $this->logger = $logger ?? new Log;
     }
 
     protected function setDefaultClassMappings()
@@ -43,7 +45,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         $this->logger = $logger;
     }
 
-    public function setInjection(InjectionInterface $injection): void
+    public function setLeader(InjectionInterface $injection): void
     {
         $this->leader = $injection;
     }
@@ -60,6 +62,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         ?string $andNamespace = null,
         string|bool $andInterface = false,
     ): InjectionInterface {
+        $fromClass = ltrim($fromClass, '\\');
         $toClass = $toClass ?? $fromClass;
         $this->classMappings[$fromClass] = $toClass;
         $andInterface = (is_bool($andInterface)) ? 'Interface' : $andInterface;
@@ -77,11 +80,9 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return $this;
     }
 
-    protected function matchParamToValues(int $position, string $name, array|object $withValues): mixed
+    protected function matchParamToValues(int $position, string $name, array $withValues): mixed
     {
-        if (is_object($withValues)) {
-            return $withValues->$name ?? null;
-        }
+        $this->logger->debug("matchParamToValues($position, $name, [".implode(', ', array_keys($withValues))."])");
         if (array_is_list($withValues) && $position < count($withValues)) {
             return $withValues[$position];
         }
@@ -99,11 +100,12 @@ class Injection implements InjectionInterface, LoggerAwareInterface
     protected function makeArgumentForParameter(
         \ReflectionParameter $rParam,
         int $position,
-        array|object $withValues,
+        array $withValues,
         bool $preferProvided = false,
     ): mixed {
         $type = strval($rParam->getType());
         $name = $rParam->getName();
+        $this->logger->debug("makeArgumentForParameter(type: $type, name: $name)");
         $arg = null;
         if ($preferProvided) {
             $arg = $arg ?? $this->matchParamToValues($position, $name, $withValues);
@@ -123,9 +125,9 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return $arg;
     }
 
-    protected function makeArgumentsForMethod(
-        \ReflectionMethod $rMethod,
-        array|object $withValues = [],
+    protected function makeArguments(
+        \ReflectionFunctionAbstract $rMethod,
+        array $withValues = [],
         bool $preferProvided = false,
     ): array {
         $passArguments = [];
@@ -140,7 +142,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return $passArguments;
     }
 
-    protected function postMakeNew(string $class, array|object $withValues, object $obj)
+    protected function postMakeNew(string $class, array $withValues, object $obj)
     {
         if ($obj instanceof \Psr\Log\LoggerAwareInterface) {
             $logger = $this->get('Log');
@@ -154,15 +156,15 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         }
     }
 
-    protected function makeNew(string $class, array|object $withValues = []): ?object
+    protected function makeNew(string $class, array $withValues = []): ?object
     {
         $rClass = new \ReflectionClass($class);
         $rConstructor = $rClass->getConstructor();
-        $passArguments = $this->makeArgumentsForMethod($rConstructor, $withValues, true);
+        $passArguments = $this->makeArguments($rConstructor, $withValues, true);
         return $rClass->newInstanceArgs($passArguments);
     }
 
-    public function get(string $id, array|object $withValues = [])
+    public function get(string $id, array $withValues = [])
     {
         if ($this->leader) {
             try {
@@ -191,10 +193,10 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return array_key_exists($id, $this->classMappings);
     }
 
-    public function call(callable $method, array|object $withValues = []): mixed
+    public function call(callable $method, array $withValues = []): mixed
     {
-        $rMethod = new \ReflectionMethod($method);
-        $arguments = $this->makeArgumentsForMethod($rMethod, $withValues, false);
+        $rMethod = new \ReflectionFunction($method);
+        $arguments = $this->makeArguments($rMethod, $withValues, false);
         return call_user_func_array($method, $arguments);
     }
 }

@@ -28,16 +28,20 @@ class App implements AppInterface
 
     protected function methodRegistered(callable $method): bool
     {
-        [$controllerName, $methodName] = $method;
-        return (
-            array_key_exists($controllerName, $this->controllers) &&
-            in_array($methodName, $this->controllers[$controllerName])
-        );
+        if (is_array($method))
+        {
+            [$controllerName, $methodName] = $method;
+            return (
+                array_key_exists($controllerName, $this->controllers) &&
+                in_array($methodName, $this->controllers[$controllerName])
+            );
+        }
+        return false;
     }
 
     protected function getMethodData(callable $method, ServerRequestInterface $request): mixed
     {
-        if (!count($this->controllers)) {
+        if (!count($this->controllers) && is_array($method)) {
             [$controllerName, $methodName] = $method;
             $this->registerController($controllerName);
         }
@@ -48,24 +52,19 @@ class App implements AppInterface
         return [];
     }
 
-    protected function requestIn(ServerRequestInterface $request, RoutingInterface $routing): array
+    protected function requestIn(ServerRequestInterface $request, RoutingInterface $routing): mixed
     {
-        $method = $routing->method();
-        $globalData = $this->processGlobalFetchers($request);
-        if (is_array($method)) {
-            [$controllerName, $methodName] = $method;
-            $response = $this->getMethodData($controllerName, $methodName, $request);
-        } else {
-            $controllerName = static::class;
-            $methodName = (is_string($method)) ? $method : 'notFound';
-            $response = [];
+        $method = $routing->method() ?? fn() => [];
+        $response = [];
+        if (is_callable($method)) {
+            $response = $this->getMethodData($method, $request);
         }
-        return [$response, $controllerName, $methodName, $globalData];
+        return [$response, $method];
     }
 
-    protected function responseOut(mixed $response, RoutingInterface $routing, callable $method, array $globalData)
+    protected function responseOut(mixed $response, callable $method, ServerRequestInterface $request, RoutingInterface $routing)
     {
-        [$controllerName, $methodName] = $method;
+        [$controllerName, $methodName] = (is_array($method)) ? [$method[0], $method[1]] : [static::class, 'notFound'];
         if ($response instanceof Response) {
             $redirectURL = null;
             if ($response->isRedirect) {
@@ -75,6 +74,7 @@ class App implements AppInterface
         }
         if (is_array($response) || ($response instanceof Response && !$response->isRedirect)) {
             $methodData = is_array($response) ? $response : $response->data;
+            $globalData = $this->processGlobalFetchers($request);
             $this->views->render($controllerName, $methodName, $methodData, $globalData, $routing);
         }
     }
@@ -105,7 +105,7 @@ class App implements AppInterface
 
     public function run(ServerRequestInterface $request, RoutingInterface $routing)
     {
-        [$response, $controllerName, $methodName, $globalData] = $this->requestIn($request, $routing);
-        $this->responseOut($response, $controllerName, $methodName, $globalData);
+        [$response, $method] = $this->requestIn($request, $routing);
+        $this->responseOut($response, $method, $request, $routing);
     }
 }
