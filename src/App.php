@@ -28,8 +28,7 @@ class App implements AppInterface
 
     protected function methodRegistered(callable $method): bool
     {
-        if (is_array($method))
-        {
+        if (is_array($method)) {
             [$controllerName, $methodName] = $method;
             return (
                 array_key_exists($controllerName, $this->controllers) &&
@@ -54,7 +53,7 @@ class App implements AppInterface
 
     protected function requestIn(ServerRequestInterface $request, RoutingInterface $routing): mixed
     {
-        $method = $routing->method() ?? fn() => [];
+        $method = $routing->method() ?? fn () => [];
         $response = [];
         if (is_callable($method)) {
             $response = $this->getMethodData($method, $request);

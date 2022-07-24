@@ -20,7 +20,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
             $this->singletons = array_fill_keys($singletons, null);
         }
         $this->setDefaultClassMappings();
-        $this->logger = $logger ?? new Log;
+        $this->logger = $logger ?? new Log();
     }
 
     protected function setDefaultClassMappings()

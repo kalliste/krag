@@ -4,11 +4,9 @@ namespace Krag;
 
 class LegacyInjection extends Injection
 {
-
-    protected function makeArgumentFallback(\ReflectionMethod $rMethod, \ReflectionParameter $rParam) : mixed
+    protected function makeArgumentFallback(\ReflectionParameter $rParam): mixed
     {
-        return match ($param->getType())
-        {
+        return match ($rParam->getType()) {
             '' => '',
             'string' => '',
             'int' => 0,
@@ -16,7 +14,4 @@ class LegacyInjection extends Injection
             'bool' => false,
         };
     }
-
 }
-
-?>

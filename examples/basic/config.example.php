@@ -16,7 +16,3 @@ $dbName = '';
 
 $dbType = 'sqlite';
 $dbHost = 'example.db';
-
-
-
-?>

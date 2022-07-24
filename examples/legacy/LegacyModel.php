@@ -4,7 +4,6 @@ namespace Krag;
 
 class LegacyModel extends StaticModel
 {
-
     public static function values($column, $conditions = [])
     {
         return self::list($column, $conditions);
@@ -17,32 +16,26 @@ class LegacyModel extends StaticModel
 
     public static function blob($column, $conditions, $blob)
     {
-        static::sql()->seBlob(static::table(), $column, $blob, $conditions);
+        static::sql()::seBlob(static::table(), $column, $blob, $conditions);
     }
 
-    public static function update($conditions, $newdata) : int
+    public static function update($conditions, $newdata): int
     {
-        if (!is_array($conditions))
-        {
+        if (!is_array($conditions)) {
             $conditions = ['id' => $conditions];
         }
-        return static::sql()->update(static::table(), $conditions, $newdata);
+        return static::sql()::update(static::table(), $conditions, $newdata);
     }
 
-    public static function insert(array $records, $y = '') : int
+    public static function insert(array $records, $y = ''): int
     {
-        if (is_array($y))
-        {
+        if (is_array($y)) {
             $conditions = $records;
             $records = [];
-            foreach ($y as $record)
-            {
+            foreach ($y as $record) {
                 $records[] = array_merge($y, $conditions);
             }
         }
-        return static::sql()->insert(static::table(), $records);
+        return static::sql()::insert(static::table(), $records);
     }
-
 }
-
-?>
