@@ -10,19 +10,19 @@ class Injection implements InjectionInterface, LoggerAwareInterface
 {
 
     private ?InjectionInterface $leader = null;
-    private WeakMap $loggers;
-    private WeakMap $injectors;
 
     public function __construct(
         protected array $singletons = [],
         protected array $classMappings = [],
         public ?\Psr\Log\LoggerInterface $logger = null,
     ) {
-        $this->loggers = new WeakMap;
         if (count($singletons) && array_is_list($singletons))
         {
             $this->singletons = array_fill_keys($singletons, null);
         }
+        $this->setClassMapping('Request', 'Krag\Request', 'Krag');
+        $this->setClassMapping('Response', 'Krag\Response', 'Krag');
+        $this->setClassMapping('LogEntry', 'Krag\LogEntry', 'Krag');
         $this->setClassMapping('App', 'Krag\App', 'Krag', true);
         $this->setClassMapping('DB', 'Krag\DB', 'Krag', true);
         $this->setClassMapping('HTTP', 'Krag\HTTP', 'Krag', true);
@@ -62,20 +62,21 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return null;
     }
 
-    protected function makeArgumentFallback(\ReflectionMethod $rMethod, \ReflectionParameter $rParam) : mixed
+    protected function makeArgumentFallback(\ReflectionParameter $rParam) : mixed
     {
         return null;
     }
 
-    protected function makeArgumentForParameter(\ReflectionParameter $rParam, array|object $withValues, bool $preferProvided = false) : mixed
+    protected function makeArgumentForParameter(\ReflectionParameter $rParam, int $position, array|object $withValues, bool $preferProvided = false) : mixed
     {
         $type = strval($rParam->getType());
+        $name = $rParam->getName();
         $arg = null;
         if ($preferProvided)
         {
-            $arg = $arg ?? $this->matchParamToValues($i, $rParam->getName(), $withValues);
+            $arg = $arg ?? $this->matchParamToValues($position, $name, $withValues);
         }
-        $arg = $arg ?? (static::class == $type) ? $this : null;
+        $arg = $arg ?? ((static::class == $type) ? $this : null);
         try
         {
             $arg = $arg ?? $this->get($type);
@@ -85,12 +86,12 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         }
         if (!$preferProvided)
         {
-            $arg = $arg ?? $this->matchParamToValues($i, $rParam->getName(), $withValues);
+            $arg = $arg ?? $this->matchParamToValues($position, $name, $withValues);
         }
-        $arg = $arg ?? ($rParam->isOptional()) ? $rParam->getDefaultValue() : null;
+        $arg = $arg ?? (($rParam->isOptional()) ? $rParam->getDefaultValue() : null);
         if (!$rParam->isOptional())
         {
-            $arg = $arg ?? $this->makeArgumentFallback($rMethod, $rParam);
+            $arg = $arg ?? $this->makeArgumentFallback($rParam);
         }
         return $arg;
     }
@@ -101,7 +102,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         $i = 0;
         foreach ($rMethod->getParameters() as $rParam)
         {
-            $arg = $this->makeArgumentForParameter($rParam, $withValues, $preferProvided);
+            $arg = $this->makeArgumentForParameter($rParam, $i, $withValues, $preferProvided);
             if (!is_null($arg) || !$rParam->isOptional())
             {
                 $passArguments[$rParam->getName()] = $arg;
@@ -117,8 +118,9 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return $this;
     }
 
-    public function setClassMapping(string $fromClass, string $toClass, ?string $andNamespace = null, string|bool $andInterface = false) : InjectionInterface
+    public function setClassMapping(string $fromClass, ?string $toClass = null, ?string $andNamespace = null, string|bool $andInterface = false) : InjectionInterface
     {
+        $toClass = $toClass ?? $fromClass;
         $this->classMappings[$fromClass] = $toClass;
         $andInterface = (is_bool($andInterface)) ? 'Interface' : $andInterface;
         if (is_null($andNamespace))
@@ -137,7 +139,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
                 $this->classMappings[$namespace.$fromClass.'Interface'] = $toClass;
             }
         }
-        return $ret;
+        return $this;
     }
 
     protected function postMakeNew(string $class, array|object $withValues, object $obj)
@@ -171,14 +173,14 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         {
             try
             {
-                $result = $this->leader->make($class, $withValues);
+                $result = $this->leader->make($id, $withValues);
                 return $result;
             }
             catch (NotFoundExceptionInterface $e)
             {
             }
         }
-        $class = $this->classMappings[$class] ?? $class;
+        $class = $this->classMappings[$id] ?? $id;
         if ($class == static::class && $withValues == [])
         {
             return $this;

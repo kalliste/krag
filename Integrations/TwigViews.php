@@ -16,7 +16,8 @@ class TwigViews implements ViewsInterface
 
     protected function templateFile(string $controllerName, string $methodName) : string
     {
-        return $methodName.'.html.twig';
+        $controllerName = str_replace('\\', '_', $controllerName);
+        return $this->templatePath.\DIRECTORY_SEPARATOR.$controllerName.\DIRECTORY_SEPARATOR.$methodName.'.html.twig';
     }
 
     protected function setupTemplateEngine(string $controllerName, string $methodName) : object

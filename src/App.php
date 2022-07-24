@@ -20,10 +20,13 @@ class App implements AppInterface
     {
         return array_combine(
             array_keys($this->globalFetchers),
-            function ($method)
-            {
-                return $this->injection->callMethod($method, withValues: $request);
-            }
+            array_map(
+                function($method)
+                {
+                    return $this->injection->callMethod($method, withValues: $request);
+                },
+                $this->globalFetchers
+            )
         );
     }
 
@@ -53,8 +56,8 @@ class App implements AppInterface
         return $this->injection->get('Request',
             [
                 'request' => $_REQUEST,
-                'uri' => $_SERVER['uri'],
-                'serverName' => $_SERVER['SERVER_NAME'],
+                'uri' => $_SERVER['REQUEST_URI'] ?? '',
+                'serverName' => $_SERVER['SERVER_NAME'] ?? '',
                 'get' => $_GET,
                 'post' => $_POST,
                 'cookies' => $_COOKIE,
@@ -77,10 +80,10 @@ class App implements AppInterface
             $methodName = (is_string($method)) ? $method : 'notFound';
             $response = [];
         }
-        return [$response, $controllerName, $methodName];
+        return [$response, $controllerName, $methodName, $globalData];
     }
 
-    protected function responseOut(mixed $response, string $controllerName, string $methodName)
+    protected function responseOut(mixed $response, string $controllerName, string $methodName, array $globalData)
     {
         if ($response instanceof Response)
         {
@@ -125,9 +128,9 @@ class App implements AppInterface
 
     public function run(?Request $request = null)
     {
-        $request = (is_null($request)) ? $this->defaultRequest : $request;
-        [$response, $controllerName, $methodName] = $this->requestIn($request);
-        responseOut($response, $controllerName, $methodName);
+        $request = (is_null($request)) ? $this->defaultRequest() : $request;
+        [$response, $controllerName, $methodName, $globalData] = $this->requestIn($request);
+        $this->responseOut($response, $controllerName, $methodName, $globalData);
     }
 
 }

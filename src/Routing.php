@@ -5,9 +5,11 @@ namespace Krag;
 class Routing implements RoutingInterface
 {
 
-    public function methodForRequest(RequestInfo $request, array $controllers = []) : ?callable
+    public function __construct() {}
+
+    public function methodForRequest(Request $request, array $controllers = []) : ?callable
     {
-        $path = parse_url($request->url)['path'];
+        $path = parse_url($request->uri)['path'];
         $urlParts = explode('/', $path);
         if ($path == '/')
         {

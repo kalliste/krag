@@ -16,7 +16,7 @@ class Config extends \stdClass
 
     private function settingsFromConfigFile()
     {
-        include($this->configFile);
+        require($this->configFile);
         return get_defined_vars();
     }
 

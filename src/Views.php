@@ -9,6 +9,7 @@ class Views implements ViewsInterface
 
     protected function templateFile(string $controllerName, string $methodName) : string
     {
+        $controllerName = str_replace('\\', '_', $controllerName);
         return $this->templatePath.\DIRECTORY_SEPARATOR.$controllerName.\DIRECTORY_SEPARATOR.$methodName.'.html.php';
     }
 

@@ -79,7 +79,7 @@ interface ResultInterface
 
 interface RoutingInterface
 {
-    public function methodForRequest(RequestInfo $request, array $controllers = []) : ?callable;
+    public function methodForRequest(Request $request, array $controllers = []) : ?callable;
     public function makeLink(string $className, string $methodName, string $fromCurrent = '/', array $data = []) : string;
 }
 

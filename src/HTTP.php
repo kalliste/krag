@@ -5,6 +5,8 @@ namespace Krag;
 class HTTP implements HTTPInterface
 {
 
+    public function __construct() {}
+
     public function handleResponse(Response $response, ?string $redirectURL = null)
     {
         if (is_int($response->responseCode))
@@ -15,7 +17,7 @@ class HTTP implements HTTPInterface
         {
             header('Location: '.$redirectURL);
         }
-        foreach ($response->headers as $k = > $v)
+        foreach ($response->headers as $k => $v)
         {
             header($k.': '.$v);
         }

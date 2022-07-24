@@ -1,12 +1,12 @@
 <?php
 
-use Krag\Injection;
+use Krag\{Injection, Config, App};
 
-$k = new Injection(singletons: ['Krag\Config', 'PDO']);
-$config = $k->make('Config', ['configFile' => 'config.example.php'])
-$k->make('PDO', ['dsn' => $config->dsn, 'username' => $config->dbUsername, 'password' => $config->dbPassword]);
-Model::setInjection($k);
+require_once(dirname(__FILE__).'/ExampleConfig.php');
 
-$k->make('App')->run();
+$k = new Injection(singletons: [ExampleConfig::class, PDO::class]);
+$config = $k->get(ExampleConfig::class, ['configFile' => dirname(__FILE__).'/config.example.php']);
+$k->get(PDO::class, ['dsn' => $config->dsn, 'username' => $config->dbUsername, 'password' => $config->dbPassword]);
+$k->get(App::class)->run();
 
 ?>

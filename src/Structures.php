@@ -86,12 +86,12 @@ class LogEntry
 class Request
 {
     public function __construct(
-        array $request = [],
-        string $uri = '',
-        string $serverName = '',
-        array $get = [],
-        array $post = [],
-        array $cookies = [],
+        public array $request = [],
+        public string $uri = '',
+        public string $serverName = '',
+        public array $get = [],
+        public array $post = [],
+        public array $cookies = [],
     ) {}
 }
 
