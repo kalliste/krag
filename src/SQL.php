@@ -145,8 +145,7 @@ class SQL implements SQLInterface
                 $ret .= ' WHERE ';
                 $this->haveWhere = true;
             }
-            $keyVal = $this->fieldsValues($conditions, $table, $operator);
-            $ret .= ' ('.implode(') AND (', $keyVal).') ';
+            $ret .= '('.$this->fieldsValues($conditions, $table, $operator).')';
             $this->query .= $ret;
         }
         return $this;
@@ -197,7 +196,7 @@ class SQL implements SQLInterface
         $moreSorts = [];
         foreach ($more as $k => $v) {
             if ('sort' == substr($k, 0, 4)) {
-                $which = intval(substr($k, 4));
+                $which = 'sort'.strval(intval(substr($k, 4)));
                 $moreSorts[$which] = $v;
             }
         }
@@ -232,9 +231,13 @@ class SQL implements SQLInterface
         if (array_key_exists('sort', $pagingParams)) {
             $sort = $pagingParams['sort'];
             $maybeDesc = $pagingParams['order'] ?? null;
-            $more = array_filter(function ($k) {
-                return (('sort' == substr($k, 0, 4)) && intval(substr($k, 4)) > 0);
-            }, $pagingParams);
+            $more = array_filter(
+                $pagingParams,
+                fn($k) => (
+                    ('sort' == substr($k, 0, 4)) && (intval(substr($k, 4)) > 0) ||
+                    ('order' == substr($k, 0, 4)) && (intval(substr($k, 4)) > 0)
+                )
+            );
             $ret = $ret->order($sort, $maybeDesc, ...$more);
         }
         if (array_key_exists('per_page', $pagingParams)) {
@@ -343,8 +346,7 @@ class SQL implements SQLInterface
     {
         $this->db->begin();
         $this->delete($table, $conditions);
-        $result = $this->insert($table, $records);
-        $affected = $this->db->affectedRows($result);
+        $affected = $this->insert($table, $records);
         $this->db->commit();
         return $affected;
     }

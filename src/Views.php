@@ -16,7 +16,8 @@ class Views implements ViewsInterface
 
     public function render(string $controllerName, string $methodName, array $methodData, array $globalData, RoutingInterface $routing)
     {
-        extract(array_merge($globalData, $methodData));
+        extract($globalData);
+        extract($methodData);
         include($this->templateFile($controllerName, $methodName));
     }
 }
