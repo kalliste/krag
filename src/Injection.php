@@ -67,8 +67,12 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return null;
     }
 
-    protected function makeArgumentForParameter(\ReflectionParameter $rParam, int $position, array|object $withValues, bool $preferProvided = false) : mixed
-    {
+    protected function makeArgumentForParameter(
+        \ReflectionParameter $rParam,
+        int $position,
+        array|object $withValues,
+        bool $preferProvided = false,
+    ) : mixed {
         $type = strval($rParam->getType());
         $name = $rParam->getName();
         $arg = null;
@@ -96,8 +100,11 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return $arg;
     }
 
-    protected function makeArgumentsForMethod(\ReflectionMethod $rMethod, array|object $withValues = [], bool $preferProvided = false) : array
-    {
+    protected function makeArgumentsForMethod(
+        \ReflectionMethod $rMethod,
+        array|object $withValues = [],
+        bool $preferProvided = false,
+    ) : array {
         $passArguments = [];
         $i = 0;
         foreach ($rMethod->getParameters() as $rParam)
@@ -118,8 +125,12 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return $this;
     }
 
-    public function setClassMapping(string $fromClass, ?string $toClass = null, ?string $andNamespace = null, string|bool $andInterface = false) : InjectionInterface
-    {
+    public function setClassMapping(
+        string $fromClass,
+        ?string $toClass = null,
+        ?string $andNamespace = null,
+        string|bool $andInterface = false,
+    ) : InjectionInterface {
         $toClass = $toClass ?? $fromClass;
         $this->classMappings[$fromClass] = $toClass;
         $andInterface = (is_bool($andInterface)) ? 'Interface' : $andInterface;
@@ -173,7 +184,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         {
             try
             {
-                $result = $this->leader->make($id, $withValues);
+                $result = $this->leader->get($id, $withValues);
                 return $result;
             }
             catch (NotFoundExceptionInterface $e)
@@ -195,7 +206,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
             $this->postMakeNew($class, $withValues, $obj);
             return $obj;
         }
-        throw new class('Unable to make: '.$id) extends \InvalidArgumentException implements NotFoundExceptionInterface {};;
+        throw new class('Unable to make: '.$id) extends \InvalidArgumentException implements NotFoundExceptionInterface {};
     }
 
     public function has(string $id) : bool
@@ -203,8 +214,11 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return array_key_exists($id, $this->classMappings);
     }
 
-    public function callMethod(object|string $objectOrMethod, ?string $method = null, array|object $withValues = []) : mixed
-    {
+    public function callMethod(
+        object|string $objectOrMethod,
+        ?string $method = null,
+        array|object $withValues = [],
+    ) : mixed {
         if ($this->leader)
         {
             return $this->leader->callMethod($objectOrMethod, $method, $withValues);

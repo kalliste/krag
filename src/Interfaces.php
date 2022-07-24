@@ -2,9 +2,13 @@
 
 namespace Krag;
 
+use \Psr\Container\ContainerInterface;
+use \Psr\Http\Message\ServerRequestInterface;
+use \Psr\Http\Server\RequestHandlerInterface;
+
 interface AppInterface
 {
-    public function run(?Request $request = null);
+    public function run(ServerRequestInterface $request);
     public function registerController(string|object $controller, ?string $name = null) : AppInterface;
     public function setGlobalFetcher(string $name, callable $method) : AppInterface;
 }
@@ -31,7 +35,7 @@ interface HTTPInterface
     public function handleResponse(Response $response, ?string $redirectURL = null);
 }
 
-interface InjectionInterface extends \Psr\Container\ContainerInterface
+interface InjectionInterface extends ContainerInterface
 {
     public function get(string $id, array $withValues = []);
     public function callMethod(object|string $objectOrMethod, ?string $method = null, array $withValues = []) : mixed;
@@ -79,7 +83,7 @@ interface ResultInterface
 
 interface RoutingInterface
 {
-    public function methodForRequest(Request $request, array $controllers = []) : ?callable;
+    public function methodForRequest(ServerRequestInterface $request, array $controllers = []) : ?callable;
     public function makeLink(string $className, string $methodName, string $fromCurrent = '/', array $data = []) : string;
 }
 

@@ -2,6 +2,8 @@
 
 namespace Krag;
 
+use \Psr\Http\Message\ServerRequestInterface;
+
 class App implements AppInterface
 {
 
@@ -16,14 +18,15 @@ class App implements AppInterface
         protected array $globalFetchers = [],
     ) {}
 
-    protected function processGlobalFetchers(array $request) : array
+    protected function processGlobalFetchers(ServerRequestInterface $request) : array
     {
+        $requestData = array_merge($request->getQueryParams(), $request->getParsedBody());
         return array_combine(
             array_keys($this->globalFetchers),
             array_map(
                 function($method)
                 {
-                    return $this->injection->callMethod($method, withValues: $request);
+                    return $this->injection->callMethod($method, withValues: $requestData);
                 },
                 $this->globalFetchers
             )
@@ -38,7 +41,7 @@ class App implements AppInterface
         );
     }
 
-    protected function getMethodData(string $controllerName, string $methodName) : mixed
+    protected function getMethodData(string $controllerName, string $methodName, ServerRequestInterface $request) : mixed
     {
         if (!count($this->controllers))
         {
@@ -46,29 +49,16 @@ class App implements AppInterface
         }
         if ($this->methodRegistered($controllerName, $methodName))
         {
-            return $this->injection->callMethod($this->controllers[$controllerName], $methodName, $request);
+            $requestData = array_merge($request->getQueryParams(), $request->getParsedBody());
+            return $this->injection->callMethod($this->controllers[$controllerName], $methodName, $requestData);
         }
         return [];
     }
 
-    protected function defaultRequest() : Request
-    {
-        return $this->injection->get('Request',
-            [
-                'request' => $_REQUEST,
-                'uri' => $_SERVER['REQUEST_URI'] ?? '',
-                'serverName' => $_SERVER['SERVER_NAME'] ?? '',
-                'get' => $_GET,
-                'post' => $_POST,
-                'cookies' => $_COOKIE,
-            ]
-        );
-    }
-
-    protected function requestIn(Request $request) : array
+    protected function requestIn(ServerRequestInterface $request) : array
     {
         $method = $this->routing->methodForRequest($request, $this->controllers);
-        $globalData = $this->processGlobalFetchers($request->request);
+        $globalData = $this->processGlobalFetchers($request);
         if (is_array($method))
         {
             [$controllerName, $methodName] = $method;
@@ -126,9 +116,10 @@ class App implements AppInterface
         return $this;
     }
 
-    public function run(?Request $request = null)
+    //FIXME: implement \Psr\Http\Server\RequestHandlerInterface;
+
+    public function run(ServerRequestInterface $request)
     {
-        $request = (is_null($request)) ? $this->defaultRequest() : $request;
         [$response, $controllerName, $methodName, $globalData] = $this->requestIn($request);
         $this->responseOut($response, $controllerName, $methodName, $globalData);
     }

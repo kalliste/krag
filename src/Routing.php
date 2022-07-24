@@ -2,14 +2,17 @@
 
 namespace Krag;
 
+use \Psr\Http\Message\ServerRequestInterface;
+
 class Routing implements RoutingInterface
 {
 
     public function __construct() {}
 
-    public function methodForRequest(Request $request, array $controllers = []) : ?callable
+    public function methodForRequest(ServerRequestInterface $request, array $controllers = []) : ?callable
     {
-        $path = parse_url($request->uri)['path'];
+        $uri = $request->getServerParams()['REQUEST_URI'] ?? '';
+        $path = parse_url($uri)['path'];
         $urlParts = explode('/', $path);
         if ($path == '/')
         {

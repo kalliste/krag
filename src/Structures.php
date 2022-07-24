@@ -83,18 +83,6 @@ class LogEntry
 
 }
 
-class Request
-{
-    public function __construct(
-        public array $request = [],
-        public string $uri = '',
-        public string $serverName = '',
-        public array $get = [],
-        public array $post = [],
-        public array $cookies = [],
-    ) {}
-}
-
 class Response
 {
     public function __construct(
