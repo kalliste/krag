@@ -8,7 +8,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 interface RoutingInterface
 {
-    public function method(): ?callable;
+    public function method(): callable|string|null;
     public function link(callable $target, array $data = []): string;
 }
 
@@ -103,6 +103,7 @@ interface SQLInterface
     public function gte(string $column, mixed $value, ?string $table = null): SQLInterface;
     public function group(string|array $groupBy): SQLInterface;
     public function order(string $sort, ?string $maybeDesc = null, ...$more): SQLInterface;
+    public function random() : SQLInterface;
     public function limit(int $per_page, int $page = 1): SQLInterface;
     public function orderLimit(array $pagingParams): SQLInterface;
     public function value(): mixed;

@@ -108,7 +108,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         $this->logger->debug("makeArgumentForParameter(type: $type, name: $name)");
         $arg = null;
         if ($preferProvided) {
-            $arg = $arg ?? $this->matchParamToValues($position, $name, $withValues);
+            $arg = $this->matchParamToValues($position, $name, $withValues);
         }
         $arg = $arg ?? ((static::class == $type) ? $this : null);
         try {
@@ -146,9 +146,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
     {
         if ($obj instanceof \Psr\Log\LoggerAwareInterface) {
             $logger = $this->get('Log');
-            if ($this->logger && $logger instanceof \Psr\Log\LoggerAwareInterface) {
-                $logger->setLogger($this->logger);
-            }
+            $logger->setLogger($this->logger);
             $obj->setLogger($logger);
         }
         if (array_key_exists($class, $this->singletons)) {

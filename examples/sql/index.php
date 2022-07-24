@@ -3,4 +3,5 @@
 require_once(dirname(__FILE__).'/../Environment.php');
 
 $k = getInjection();
-$k->call($k->get('App')->run(...));
+$sql = $k->get('SQL');
+

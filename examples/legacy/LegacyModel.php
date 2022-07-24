@@ -16,7 +16,7 @@ class LegacyModel extends StaticModel
 
     public static function blob($column, $conditions, $blob)
     {
-        static::sql()::seBlob(static::table(), $column, $blob, $conditions);
+        static::sql()->setBlob(static::table(), $column, $blob, $conditions);
     }
 
     public static function update($conditions, $newdata): int
@@ -24,7 +24,7 @@ class LegacyModel extends StaticModel
         if (!is_array($conditions)) {
             $conditions = ['id' => $conditions];
         }
-        return static::sql()::update(static::table(), $conditions, $newdata);
+        return static::sql()->update(static::table(), $conditions, $newdata);
     }
 
     public static function insert(array $records, $y = ''): int
@@ -36,6 +36,6 @@ class LegacyModel extends StaticModel
                 $records[] = array_merge($y, $conditions);
             }
         }
-        return static::sql()::insert(static::table(), $records);
+        return static::sql()->insert(static::table(), $records);
     }
 }

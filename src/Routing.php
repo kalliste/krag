@@ -10,7 +10,7 @@ class Routing implements RoutingInterface
     {
     }
 
-    public function method(): ?callable
+    public function method(): callable|string|null
     {
         $uri = $this->request->getServerParams()['REQUEST_URI'] ?? '';
         $path = parse_url($uri)['path'];

@@ -3,19 +3,19 @@
 use HttpSoft\ServerRequest\ServerRequestCreator;
 use Krag\{Injection, Config, App, DB, Log};
 
-require_once(dirname(__FILE__).'/../../src/Structures.php');
-require_once(dirname(__FILE__).'/../../src/Interfaces.php');
-require_once(dirname(__FILE__).'/../../src/Config.php');
-require_once(dirname(__FILE__).'/../../src/Log.php');
-require_once(dirname(__FILE__).'/../../src/Injection.php');
-require_once(dirname(__FILE__).'/../../src/Routing.php');
-require_once(dirname(__FILE__).'/../../src/Result.php');
-require_once(dirname(__FILE__).'/../../src/Views.php');
-require_once(dirname(__FILE__).'/../../src/App.php');
-require_once(dirname(__FILE__).'/../../src/DB.php');
-require_once(dirname(__FILE__).'/../../src/HTTP.php');
-require_once(dirname(__FILE__).'/../../src/SQL.php');
-require_once(dirname(__FILE__).'/../../src/Model.php');
+require_once(dirname(__FILE__).'/../src/Structures.php');
+require_once(dirname(__FILE__).'/../src/Interfaces.php');
+require_once(dirname(__FILE__).'/../src/Config.php');
+require_once(dirname(__FILE__).'/../src/Log.php');
+require_once(dirname(__FILE__).'/../src/Injection.php');
+require_once(dirname(__FILE__).'/../src/Routing.php');
+require_once(dirname(__FILE__).'/../src/Result.php');
+require_once(dirname(__FILE__).'/../src/Views.php');
+require_once(dirname(__FILE__).'/../src/App.php');
+require_once(dirname(__FILE__).'/../src/DB.php');
+require_once(dirname(__FILE__).'/../src/HTTP.php');
+require_once(dirname(__FILE__).'/../src/SQL.php');
+require_once(dirname(__FILE__).'/../src/Model.php');
 
 class ExampleConfig extends Krag\Config
 {

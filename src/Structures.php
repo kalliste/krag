@@ -26,6 +26,7 @@ enum LogLevel: int
             'critical'  => LogLevel::CRITICAL,
             'alert'     => LogLevel::ALERT,
             'emergency' => LogLevel::EMERGENCY,
+            default     => LogLevel::DEBUG,
         };
     }
 
@@ -81,8 +82,8 @@ class Response
         public array $data = [],
         public ?int $responseCode = null,
         public $headers = [],
-        bool $isRedirect = false,
-        mixed $redirectMethod = null,
+        public bool $isRedirect = false,
+        public mixed $redirectMethod = null,
     ) {
     }
 }

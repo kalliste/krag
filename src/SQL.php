@@ -72,7 +72,7 @@ class SQL implements SQLInterface
     {
         $field = (is_null($field)) ? '*' : $this->db->columnEscape($field);
         $table = (is_null($table)) ? '' : '.'.$this->db->tableEscape($table);
-        $as = (is_null($alias)) ? '' : ' AS '.$this-db->aliasEscape($alias).' ';
+        $as = (is_null($alias)) ? '' : ' AS '.$this->db->aliasEscape($alias).' ';
         $this->query .= ' COUNT('.$table.$field.') '.$as;
         return $this;
     }
@@ -211,6 +211,12 @@ class SQL implements SQLInterface
         return $this;
     }
 
+    public function random() : SQL
+    {
+        $this->query .= ' '.$this->db->randomFuncSQL.' ';
+        return $this;
+    }
+
     public function limit(int $per_page, int $page = 1): SQL
     {
         $start = strval($per_page * ($page - 1));
@@ -316,8 +322,8 @@ class SQL implements SQLInterface
         if (count($newData)) {
             $table = $this->db->tableEscape($table);
             $keyVal = $this->fieldsValues($newData);
+            $query = 'UPDATE '.$table.' SET '.$keyVal;
             $where = $this->where($conditions);
-            $query = 'UPDATE '.$table.' SET '.$keyVal.$where;
             $result = $this->db->query($query);
             return $this->db->affectedRows($result);
         }
@@ -327,7 +333,8 @@ class SQL implements SQLInterface
     public function delete(string $table, array $conditions = []): int
     {
         $table = $this->db->tableEscape($table);
-        $query = 'DELETE FROM '.$table.$this->where($conditions);
+        $query = 'DELETE FROM '.$table;
+        $this->where($conditions);
         $result = $this->db->query($query);
         return $this->db->affectedRows($result);
     }
@@ -346,9 +353,9 @@ class SQL implements SQLInterface
     {
         $table = $this->db->tableEscape($table);
         $column = $this->db->columnEscape($column);
-        $where = $this->where($conditions);
-        $query = 'UPDATE '.$table.' SET '.$column.' = ? '.$where;
+        $query = 'UPDATE '.$table.' SET '.$column.' = ? ';
+        $this->where($conditions);
         $result = $this->db->setBlob($query, $blob);
-        return $this-db->affectedRows($result);
+        return $this->db->affectedRows($result);
     }
 }

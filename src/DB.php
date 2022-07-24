@@ -7,7 +7,7 @@ class DB implements DBInterface
     private \PDO $conn;
     private string $columnQuoteCharLeft;
     private string $columnQuoteCharRight;
-    private string $randomFuncSQL;
+    public string $randomFuncSQL;
 
     public function __construct(
         string $type,
@@ -108,7 +108,7 @@ class DB implements DBInterface
 
     public function insertId(): int
     {
-        return $this->conn->lastInsertId();
+        return intval($this->conn->lastInsertId());
     }
 
     public function affectedRows(object $result): int

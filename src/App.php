@@ -22,7 +22,7 @@ class App implements AppInterface
         $requestData = array_merge($request->getQueryParams(), $request->getParsedBody());
         return array_combine(
             array_keys($this->globalFetchers),
-            array_map(fn ($method) => $this->injection->callMethod($method, withValues: $requestData), $this->globalFetchers)
+            array_map(fn ($method) => $this->injection->call($method, withValues: $requestData), $this->globalFetchers)
         );
     }
 
@@ -46,7 +46,7 @@ class App implements AppInterface
         }
         if ($this->methodRegistered($method)) {
             $requestData = array_merge($request->getQueryParams(), $request->getParsedBody());
-            return $this->injection->callMethod($method, withValues: $requestData);
+            return $this->injection->call($method, withValues: $requestData);
         }
         return [];
     }
