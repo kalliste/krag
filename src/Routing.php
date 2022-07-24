@@ -6,13 +6,13 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class Routing implements RoutingInterface
 {
-    public function __construct()
+    public function __construct(private ServerRequestInterface $request)
     {
     }
 
-    public function methodForRequest(ServerRequestInterface $request, array $controllers = []): ?callable
+    public function method(): ?callable
     {
-        $uri = $request->getServerParams()['REQUEST_URI'] ?? '';
+        $uri = $this->request->getServerParams()['REQUEST_URI'] ?? '';
         $path = parse_url($uri)['path'];
         $urlParts = explode('/', $path);
         if ($path == '/') {
@@ -26,10 +26,10 @@ class Routing implements RoutingInterface
         return null;
     }
 
-    public function makeLink(string $className, string $methodName, string $fromCurrent = '/', array $data = []): string
+    public function link(callable $target, array $data = []): string
     {
+        $fromCurrent = $this->request->getServerParams()['REQUEST_URI'] ?? '';
         $source = explode('/', trim($fromCurrent, '/'));
-        $target = [$className, $methodName];
         while (count($source) && count($target) && $source[0] == $target[0]) {
             $source = array_slice($source, 1);
             $target = array_slice($target, 1);

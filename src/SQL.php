@@ -47,6 +47,7 @@ class SQL implements SQLInterface
 
     public function select(string|array $fields = [], ?string $table = null): SQL
     {
+        $ret = '';
         if (!$this->haveSelect) {
             $ret .= 'SELECT ';
             $this->haveSelect = true;
@@ -78,6 +79,7 @@ class SQL implements SQLInterface
 
     public function from(string $table, ?string $alias = null): SQL
     {
+        $ret = '';
         // FIXME: don't use haveSelect here once we split the internal representation
         if (!$this->haveSelect) {
             $ret .= 'SELECT ';
@@ -231,7 +233,8 @@ class SQL implements SQLInterface
         }
         if (array_key_exists('per_page', $pagingParams)) {
             $page = $pagingParams['page'] ?? 1;
-            $ret = $ret->limit($per_page, $page);
+            $perPage = $pagingParams['page'] ?? 1;
+            $ret = $ret->limit($perPage, $page);
         }
         return $ret;
     }
@@ -265,7 +268,7 @@ class SQL implements SQLInterface
     {
         $result = $this->db->query($this->query);
         $ret = [];
-        while ($row = $this->db-fetchAssoc($result)) {
+        while ($row = $this->db->fetchAssoc($result)) {
             $ret[] = $row;
         }
         return $ret;
@@ -302,7 +305,7 @@ class SQL implements SQLInterface
                 $first = false;
                 $query .= "('".implode("', '", $this->db->escape($record))."')";
             }
-            $result = $this->db->query($this->insertSQL($table, $records));
+            $result = $this->db->query($query);
             return $this->db->affectedRows($result);
         }
         return 0;
@@ -346,6 +349,6 @@ class SQL implements SQLInterface
         $where = $this->where($conditions);
         $query = 'UPDATE '.$table.' SET '.$column.' = ? '.$where;
         $result = $this->db->setBlob($query, $blob);
-        return $this-db>affectedRows($result);
+        return $this-db->affectedRows($result);
     }
 }

@@ -4,20 +4,35 @@ namespace Krag;
 
 class DB implements DBInterface
 {
-    private string $dbType;
+    private \PDO $conn;
     private string $columnQuoteCharLeft;
     private string $columnQuoteCharRight;
     private string $randomFuncSQL;
 
     public function __construct(
-        private \PDO $conn,
-        ?LogInterface $log = null,
+        string $type,
+        string $database,
+        string $host = '',
+        string $username = '',
+        string $password = '',
+        private ?LogInterface $log = null,
     ) {
-        preg_match('/(.*):/', $dsn, $matches);
-        if ($matches) {
-            $this->dbType = $matches[1];
-        }
-        switch ($this->dbType) {
+        $dsn = $this->makeDSN($type, $host, $database);
+        $this->conn = new \PDO($dsn, $username, $password);
+        $this->setDatabaseParameters($type);
+    }
+
+    protected function makeDSN(string $type, string $host, string $database)
+    {
+        $ret = $type.':';
+        $ret .= ($host) ? 'host='.$host : '';
+        $ret .= ($database) ? 'dbname='.$database : '';
+        return $ret;
+    }
+
+    protected function setDatabaseParameters(string $type)
+    {
+        switch ($type) {
             case 'mysql':
                 $this->columnQuoteCharLeft = '`';
                 $this->columnQuoteCharRight = '`';
@@ -71,7 +86,7 @@ class DB implements DBInterface
         if (is_object($result)) {
             $this->logAnyError($result);
         } else {
-            $this->logAnyError($db);
+            $this->logAnyError($this->conn);
         }
         return $result;
     }
@@ -88,12 +103,12 @@ class DB implements DBInterface
 
     public function closeCursor(object $result): bool
     {
-        return $object->closeCursor();
+        return $result->closeCursor();
     }
 
     public function insertId(): int
     {
-        $this->conn->lastInsertId();
+        return $this->conn->lastInsertId();
     }
 
     public function affectedRows(object $result): int
@@ -106,12 +121,12 @@ class DB implements DBInterface
         if (is_array($toEscape)) {
             return array_map($this->escape(...), $toEscape);
         }
-        return substr($this->conn->quote($str), 1, -1);
+        return substr($this->conn->quote($toEscape), 1, -1);
     }
 
     private function noSpecials(string $toEscape): string
     {
-        return preg_replace('/[^A-Za-z0-9_]/', '', $str);
+        return preg_replace('/[^A-Za-z0-9_]/', '', $toEscape);
     }
 
     public function tableEscape(string $toEscape): string
@@ -129,11 +144,11 @@ class DB implements DBInterface
             return implode(', ', array_map($this->columnEscape(...), $toEscape));
         }
         $table = (is_string($table)) ? $this->tableEscape($table).'.' : '';
-        $escaped = $this->nosSpecials($toEscape);
+        $escaped = $this->noSpecials($toEscape);
         return $cl.$table.$escaped.$cr;
     }
 
-    private function aliasEscape(string $str): string
+    public function aliasEscape(string $toEscape): string
     {
         return $this->noSpecials($toEscape);
     }

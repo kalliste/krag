@@ -6,9 +6,15 @@ use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
+interface RoutingInterface
+{
+    public function method(): ?callable;
+    public function link(callable $target, array $data = []): string;
+}
+
 interface AppInterface
 {
-    public function run(ServerRequestInterface $request);
+    public function run(ServerRequestInterface $request, RoutingInterface $routing);
     public function registerController(string|object $controller, ?string $name = null): AppInterface;
     public function setGlobalFetcher(string $name, callable $method): AppInterface;
 }
@@ -27,6 +33,7 @@ interface DBInterface
     public function escape(string|array $toEscape): string|array;
     public function tableEscape(string $toEscape): string;
     public function columnEscape(string|array $toEscape, ?string $table = null): string;
+    public function aliasEscape(string $toEscape): string;
     public function setBlob(string $query, string $blob): object;
 }
 
@@ -79,12 +86,6 @@ interface ResultInterface
 {
     public function redirect(callable $method, array $data = [], ?int $responseCode = null, $headers = []): ResultInterface;
     public function getResponse(): Response;
-}
-
-interface RoutingInterface
-{
-    public function methodForRequest(ServerRequestInterface $request, array $controllers = []): ?callable;
-    public function makeLink(string $className, string $methodName, string $fromCurrent = '/', array $data = []): string;
 }
 
 interface SQLInterface

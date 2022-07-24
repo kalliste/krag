@@ -10,7 +10,6 @@ class App implements AppInterface
 
     public function __construct(
         protected InjectionInterface $injection,
-        protected RoutingInterface $routing,
         protected ViewsInterface $views,
         protected HTTPInterface $http,
         protected string $controllerPath = 'controllers',
@@ -23,42 +22,39 @@ class App implements AppInterface
         $requestData = array_merge($request->getQueryParams(), $request->getParsedBody());
         return array_combine(
             array_keys($this->globalFetchers),
-            array_map(
-                function ($method) {
-                    return $this->injection->callMethod($method, withValues: $requestData);
-                },
-                $this->globalFetchers
-            )
+            array_map(fn ($method) => $this->injection->callMethod($method, withValues: $requestData), $this->globalFetchers)
         );
     }
 
-    protected function methodRegistered($controllerName, $methodName): bool
+    protected function methodRegistered(callable $method): bool
     {
+        [$controllerName, $methodName] = $method;
         return (
             array_key_exists($controllerName, $this->controllers) &&
             in_array($methodName, $this->controllers[$controllerName])
         );
     }
 
-    protected function getMethodData(string $controllerName, string $methodName, ServerRequestInterface $request): mixed
+    protected function getMethodData(callable $method, ServerRequestInterface $request): mixed
     {
         if (!count($this->controllers)) {
+            [$controllerName, $methodName] = $method;
             $this->registerController($controllerName);
         }
-        if ($this->methodRegistered($controllerName, $methodName)) {
+        if ($this->methodRegistered($method)) {
             $requestData = array_merge($request->getQueryParams(), $request->getParsedBody());
-            return $this->injection->callMethod($this->controllers[$controllerName], $methodName, $requestData);
+            return $this->injection->callMethod($method, withValues: $requestData);
         }
         return [];
     }
 
-    protected function requestIn(ServerRequestInterface $request): array
+    protected function requestIn(ServerRequestInterface $request, RoutingInterface $routing): array
     {
-        $method = $this->routing->methodForRequest($request, $this->controllers);
+        $method = $routing->method();
         $globalData = $this->processGlobalFetchers($request);
         if (is_array($method)) {
             [$controllerName, $methodName] = $method;
-            $response = $this->getMethodData($controllerName, $methodName);
+            $response = $this->getMethodData($controllerName, $methodName, $request);
         } else {
             $controllerName = static::class;
             $methodName = (is_string($method)) ? $method : 'notFound';
@@ -67,18 +63,19 @@ class App implements AppInterface
         return [$response, $controllerName, $methodName, $globalData];
     }
 
-    protected function responseOut(mixed $response, string $controllerName, string $methodName, array $globalData)
+    protected function responseOut(mixed $response, RoutingInterface $routing, callable $method, array $globalData)
     {
+        [$controllerName, $methodName] = $method;
         if ($response instanceof Response) {
             $redirectURL = null;
             if ($response->isRedirect) {
-                $redirectURL = $this->routing->makeLink($controllerName, $methodName, $request['uri'], $response->data);
+                $redirectURL = $routing->link($method, $response->data);
             }
-            $http->handleResponse($response, $redirectURL);
+            $this->http->handleResponse($response, $redirectURL);
         }
         if (is_array($response) || ($response instanceof Response && !$response->isRedirect)) {
             $methodData = is_array($response) ? $response : $response->data;
-            $this->views->render($controllerName, $methodName, $methodData, $globalData, $this->routing);
+            $this->views->render($controllerName, $methodName, $methodData, $globalData, $routing);
         }
     }
 
@@ -106,9 +103,9 @@ class App implements AppInterface
 
     //FIXME: implement \Psr\Http\Server\RequestHandlerInterface;
 
-    public function run(ServerRequestInterface $request)
+    public function run(ServerRequestInterface $request, RoutingInterface $routing)
     {
-        [$response, $controllerName, $methodName, $globalData] = $this->requestIn($request);
+        [$response, $controllerName, $methodName, $globalData] = $this->requestIn($request, $routing);
         $this->responseOut($response, $controllerName, $methodName, $globalData);
     }
 }

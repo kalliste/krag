@@ -25,6 +25,6 @@ class Result implements ResultInterface
 
     public function getResponse(): Response
     {
-        return new Response($this->data, $this->getResponseCode, $this->headers, $this->isRedirect, $this->redirectMethod);
+        return new Response($this->data, $this->responseCode, $this->headers, $this->isRedirect, $this->redirectMethod);
     }
 }
