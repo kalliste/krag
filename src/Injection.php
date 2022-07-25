@@ -144,9 +144,11 @@ class Injection implements InjectionInterface, LoggerAwareInterface
     {
         $this->trace("makeArgumentFromValues($position, $name, keys: [".implode(', ', array_keys($withValues))."])");
         if (array_is_list($withValues) && $position < count($withValues)) {
+            $this->trace("matched by position");
             return $withValues[$position];
         }
         if (array_key_exists($name, $withValues)) {
+            $this->trace("matched by name");
             return $withValues[$name];
         }
         return null;
@@ -154,8 +156,11 @@ class Injection implements InjectionInterface, LoggerAwareInterface
 
     protected function makeContainerArgumentFromMyself(string $type): ?Injection
     {
-        $this->trace("makeContainerArgumentFromMyself");
-        return (static::class == $type) ? $this : null;
+        if (static::class == $type) {
+            $this->trace("matched myself");
+            return $this;
+        }
+        return null;
     }
 
     /**
@@ -168,7 +173,6 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         array $withValues,
         bool $preferProvided = false,
     ): mixed {
-        $this->trace("makeContainerArgumentFromContainerGet");
         $type = strval($rParam->getType());
         if ($container) {
             try {
@@ -177,6 +181,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
                 } else {
                     $obj = $container->get($type);
                 }
+                $this->trace("matched by get");
                 return $obj;
             } catch (NotFoundExceptionInterface $e) {
             }
@@ -186,8 +191,11 @@ class Injection implements InjectionInterface, LoggerAwareInterface
 
     protected function makeArgumentFromDefaultValue(\ReflectionParameter $rParam): mixed
     {
-        $this->trace("makeContainerArgumentFromDefaultValue");
-        return ($rParam->isOptional()) ? $rParam->getDefaultValue() : null;
+        if ($rParam->isOptional()) {
+            $this->trace("matched by default value");
+            return $rParam->getDefaultValue();
+        }
+        return null;
     }
 
     /**
@@ -199,7 +207,6 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         array $withValues,
         bool $preferProvided = false,
     ): mixed {
-        $this->trace("makeArgumentFallback");
         return null;
     }
 
