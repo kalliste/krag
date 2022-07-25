@@ -90,7 +90,7 @@ class App implements AppInterface
         }
         [$controllerName, $methodName] = (is_array($method)) ? [$method[0], $method[1]] : [static::class, 'notFound'];
         $globalData = $this->processGlobalFetchers($request);
-        return $this->views->render($controllerName, $methodName, $methodData, $globalData, $response);
+        return $this->views->render($controllerName, $methodName, $methodData, $globalData, $this->routing, $response);
     }
 
     public function setGlobalFetcher(string $name, callable $method): App

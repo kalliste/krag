@@ -8,5 +8,5 @@ use Krag\Result;
 function app_redirect(string $action = "index", $vars = []): Result
 {
     $vars['action'] = $action;
-    return (new Result)->redirect($action, $vars);
+    return (new Result())->redirect($action, $vars);
 }

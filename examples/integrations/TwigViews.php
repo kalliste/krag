@@ -2,7 +2,6 @@
 
 namespace Krag;
 
-use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\ResponseInterface;
 
 class TwigViews implements ViewsInterface
@@ -11,8 +10,6 @@ class TwigViews implements ViewsInterface
      * @param array<string, mixed> $templateOptions
      */
     public function __construct(
-        private RoutingInterface $routing,
-        private StreamInterface $stream,
         protected string $templatePath = 'templates',
         protected array $templateOptions = [
             'cache' => false,
@@ -43,21 +40,14 @@ class TwigViews implements ViewsInterface
         return $engine->render($this->templateFile($controllerName, $methodName), $data);
     }
 
-    protected function writeToStream(string $buf): string
-    {
-        $this->stream->write($buf);
-        return '';
-    }
-
     /**
      * @param array<string, mixed> $methodData
      * @param array<string, mixed> $globalData
      */
-    public function render(string $controllerName, string $methodName, array $methodData, array $globalData, ResponseInterface $response): ResponseInterface
+    public function render(string $controllerName, string $methodName, array $methodData, array $globalData, RoutingInterface $routing, ResponseInterface $response): ResponseInterface
     {
-        ob_start($this->writeToStream(...));
-        $this->writeToStream($this->fillTemplate($controllerName, $methodName, array_merge(['routing' => $this->routing], $globalData, $methodData)));
-        $this->writeToStream(ob_get_clean());
-        return $response->withBody($this->stream);
+        $filled = $this->fillTemplate($controllerName, $methodName, array_merge(compact('routing'), $globalData, $methodData));
+        $response->getBody()->write($filled);
+        return $response;
     }
 }

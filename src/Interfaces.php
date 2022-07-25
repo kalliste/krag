@@ -253,5 +253,5 @@ interface ViewsInterface
      * @param array<string, mixed> $methodData
      * @param array<string, mixed> $globalData
      */
-    public function render(string $controllerName, string $methodName, array $methodData, array $globalData, ResponseInterface $response): ResponseInterface;
+    public function render(string $controllerName, string $methodName, array $methodData, array $globalData, RoutingInterface $routing, ResponseInterface $response): ResponseInterface;
 }
