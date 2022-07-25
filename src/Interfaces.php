@@ -54,7 +54,8 @@ interface DBInterface
 
 interface HTTPInterface
 {
-    public function handleResponse(ResponseInterface $response, ?string $redirectURL = null): void;
+    public function sendHeaders(ResponseInterface $response): void;
+    public function printBody(ResponseInterface $response): void;
 }
 
 interface InjectionInterface extends ContainerInterface

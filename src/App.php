@@ -124,6 +124,7 @@ class App implements AppInterface
     public function run(ServerRequestInterface $request): void
     {
         $response = $this->handle($request);
-        print($response->getBody()->getContents());
+        $this->http->sendHeaders($response);
+        $this->http->printBody($response);
     }
 }
