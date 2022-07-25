@@ -66,11 +66,17 @@ class Injection implements InjectionInterface, LoggerAwareInterface
 
     public function setLeader(ContainerInterface $injection): void
     {
+        if ($this->follower instanceof Injection) {
+            throw new \InvalidArgumentException("Can't set both leader and follower of type Injection; pick a direction to chain.");
+        }
         $this->leader = $injection;
     }
 
     public function setFollower(ContainerInterface $injection): void
     {
+        if ($this->leader instanceof Injection) {
+            throw new \InvalidArgumentException("Can't set both leader and follower of type Injection; pick a direction to chain.");
+        }
         $this->follower = $injection;
     }
 
@@ -125,13 +131,28 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return (static::class == $type) ? $this : null;
     }
 
-    protected function makeArgumentFromContainerGet(string $type, ContainerInterface $container): mixed
-    {
+    /**
+     * @param array<int|string, mixed> $withValues
+     */
+    protected function makeArgumentFromContainerGet(
+        ?ContainerInterface $container,
+        \ReflectionParameter $rParam,
+        int $position,
+        array $withValues,
+        bool $preferProvided = false,
+    ): mixed {
         $this->trace("makeContainerArgumentFromContainerGet");
-        try {
-            $obj = $container->get($type);
-            return $obj;
-        } catch (NotFoundExceptionInterface $e) {
+        $type = strval($rParam->getType());
+        if ($container) {
+            try {
+                if ($container instanceof Injection) {
+                    $obj = $container->get($type, $withValues, $preferProvided);
+                } else {
+                    $obj = $container->get($type);
+                }
+                return $obj;
+            } catch (NotFoundExceptionInterface $e) {
+            }
         }
         return null;
     }
@@ -152,18 +173,6 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         bool $preferProvided = false,
     ): mixed {
         $this->trace("makeArgumentFallback");
-        if ($this->follower) {
-            try {
-                if ($this->follower instanceof Injection) {
-                    $obj = $this->follower->makeArgumentForParameter($rParam, $position, $withValues, $preferProvided);
-                } else {
-                    $type = strval($rParam->getType());
-                    $obj = $this->follower->get($type);
-                }
-                return $obj;
-            } catch (NotFoundExceptionInterface $e) {
-            }
-        }
         return null;
     }
 
@@ -183,12 +192,14 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         if ($preferProvided) {
             $arg = $this->makeArgumentFromValues($position, $name, $withValues);
         }
+        $arg = $arg ?? $this->makeArgumentFromContainerGet($this->leader, $rParam, $position, $withValues, $preferProvided);
         $arg = $arg ?? $this->makeContainerArgumentFromMyself($type);
-        $arg = $arg ?? $this->makeArgumentFromContainerGet($type, $this);
+        $arg = $arg ?? $this->makeArgumentFromContainerGet($this, $rParam, $position, $withValues, $preferProvided);
         if (!$preferProvided) {
             $arg = $arg ?? $this->makeArgumentFromValues($position, $name, $withValues);
         }
         $arg = $arg ?? $this->makeArgumentFromDefaultValue($rParam);
+        $arg = $arg ?? $this->makeArgumentFromContainerGet($this->follower, $rParam, $position, $withValues, $preferProvided);
         if (!$rParam->isOptional()) {
             $arg = $arg ?? $this->makeArgumentFallback($rParam, $position, $withValues, $preferProvided);
         }
