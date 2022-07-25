@@ -72,13 +72,13 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         $andInterface = (is_bool($andInterface)) ? 'Interface' : $andInterface;
         if (is_null($andNamespace)) {
             if ($andInterface) {
-                $this->classMappings[$fromClass.'Interface'] = $toClass;
+                $this->classMappings[$fromClass.$andInterface] = $toClass;
             }
         } else {
             $namespace = rtrim($andNamespace, '\\').'\\';
             $this->classMappings[$namespace.$fromClass] = $toClass;
             if ($andInterface) {
-                $this->classMappings[$namespace.$fromClass.'Interface'] = $toClass;
+                $this->classMappings[$namespace.$fromClass.$andInterface] = $toClass;
             }
         }
         return $this;
