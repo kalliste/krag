@@ -119,13 +119,15 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return null;
     }
 
-    protected function makeArgumentFromMyself(string $type): mixed
+    protected function makeContainerArgumentFromMyself(string $type): ?Injection
     {
+        $this->trace("makeContainerArgumentFromMyself");
         return (static::class == $type) ? $this : null;
     }
 
     protected function makeArgumentFromContainerGet(string $type, ContainerInterface $container): mixed
     {
+        $this->trace("makeContainerArgumentFromContainerGet");
         try {
             $obj = $container->get($type);
             return $obj;
@@ -136,6 +138,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
 
     protected function makeArgumentFromDefaultValue(\ReflectionParameter $rParam): mixed
     {
+        $this->trace("makeContainerArgumentFromDefaultValue");
         return ($rParam->isOptional()) ? $rParam->getDefaultValue() : null;
     }
 
@@ -148,9 +151,10 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         array $withValues,
         bool $preferProvided = false,
     ): mixed {
+        $this->trace("makeArgumentFallback");
         if ($this->follower) {
             try {
-                if ($this->follower instanceof InjectionInterface) {
+                if ($this->follower instanceof Injection) {
                     $obj = $this->follower->makeArgumentForParameter($rParam, $position, $withValues, $preferProvided);
                 } else {
                     $type = strval($rParam->getType());
@@ -179,7 +183,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         if ($preferProvided) {
             $arg = $this->makeArgumentFromValues($position, $name, $withValues);
         }
-        $arg = $arg ?? $this->makeArgumentFromMyself($type);
+        $arg = $arg ?? $this->makeContainerArgumentFromMyself($type);
         $arg = $arg ?? $this->makeArgumentFromContainerGet($type, $this);
         if (!$preferProvided) {
             $arg = $arg ?? $this->makeArgumentFromValues($position, $name, $withValues);
@@ -188,6 +192,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         if (!$rParam->isOptional()) {
             $arg = $arg ?? $this->makeArgumentFallback($rParam, $position, $withValues, $preferProvided);
         }
+        $this->trace((is_null($arg)) ? "Made null arg" : "Made non-null arg");
         return $arg;
     }
 
@@ -217,6 +222,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
      */
     protected function makeNew(string $class, array $withValues = [], bool $preferProvided = false): ?object
     {
+        $this->trace("makeNew $class");
         $rClass = new \ReflectionClass($class);
         $rConstructor = $rClass->getConstructor();
         $passArguments = $this->makeArguments($rConstructor, $withValues, $preferProvided);
@@ -241,14 +247,14 @@ class Injection implements InjectionInterface, LoggerAwareInterface
     /**
      * @param array<int|string, mixed> $withValues
      */
-    protected function getFromLeader(string $id, array $withValues = []): mixed
+    protected function getFromContainer(?ContainerInterface $container, string $id, array $withValues, bool $preferProvided): mixed
     {
-        if ($this->leader) {
+        if ($container) {
             try {
-                if ($this->leader instanceof InjectionInterface) {
-                    $result = $this->leader->get($id, $withValues);
+                if ($container instanceof InjectionInterface) {
+                    $result = $container->get($id, $withValues, $preferProvided);
                 } else {
-                    $result = $this->leader->get($id);
+                    $result = $container->get($id);
                 }
                 return $result;
             } catch (NotFoundExceptionInterface $e) {
@@ -260,7 +266,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
     /**
      * @param array<int|string, mixed> $withValues
      */
-    protected function getFromThis(string $class, array $withValues = []): mixed
+    protected function getContainerFromMyself(string $class, array $withValues, bool $preferProvided): ?Injection
     {
         if ($class == static::class && $withValues == []) {
             return $this;
@@ -285,9 +291,12 @@ class Injection implements InjectionInterface, LoggerAwareInterface
     protected function getNew(string $class, array $withValues = [], bool $preferProvided = false): mixed
     {
         if (class_exists($class)) {
+            $this->trace("Class $class exists, try makeNew");
             $obj = $this->makeNew($class, $withValues, $preferProvided);
             $this->postMakeNew($class, $withValues, $obj);
             return $obj;
+        } else {
+            $this->trace("Class $class does not exist");
         }
         return null;
     }
@@ -297,11 +306,13 @@ class Injection implements InjectionInterface, LoggerAwareInterface
      */
     public function get(string $id, array $withValues = [], bool $preferProvided = true)
     {
-        $obj = $this->getFromLeader($id, $withValues);
+        $this->trace("get $id");
+        $obj = $this->getFromContainer($this->leader, $id, $withValues, $preferProvided);
         $class = $this->classMappings[$id] ?? $id;
-        $obj = $obj ?? $this->getFromThis($class, $withValues);
+        $obj = $obj ?? $this->getContainerFromMyself($class, $withValues, $preferProvided);
         $obj = $obj ?? $this->getFromSingletons($class, $withValues);
         $obj = $obj ?? $this->getNew($class, $withValues, $preferProvided);
+        $obj = $obj ?? $this->getFromContainer($this->follower, $id, $withValues, $preferProvided);
         if (is_null($obj)) {
             throw new class ('Unable to make: '.$id) extends \InvalidArgumentException implements NotFoundExceptionInterface {};
         }
