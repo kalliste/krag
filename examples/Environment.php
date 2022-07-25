@@ -3,9 +3,10 @@
 use HttpSoft\ServerRequest\ServerRequestCreator;
 use Krag\{Injection, Config, App, DB, Log};
 
-require_once(dirname(__FILE__).'/../src/Structures.php');
 require_once(dirname(__FILE__).'/../src/Interfaces.php');
 require_once(dirname(__FILE__).'/../src/Config.php');
+require_once(dirname(__FILE__).'/../src/LogLevel.php');
+require_once(dirname(__FILE__).'/../src/LogEntry.php');
 require_once(dirname(__FILE__).'/../src/Log.php');
 require_once(dirname(__FILE__).'/../src/Injection.php');
 require_once(dirname(__FILE__).'/../src/Routing.php');
