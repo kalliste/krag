@@ -3,7 +3,7 @@
 namespace Krag;
 
 use Psr\Container\ContainerInterface;
-use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
 use Psr\Http\Server\RequestHandlerInterface;
 
 interface RoutingInterface
@@ -15,9 +15,8 @@ interface RoutingInterface
     public function link(callable $target, array $data = []): string;
 }
 
-interface AppInterface
+interface AppInterface extends RequestHandlerInterface
 {
-    public function run(ServerRequestInterface $request, RoutingInterface $routing): void;
     public function registerController(string|object $controller, ?string $name = null): AppInterface;
     public function setGlobalFetcher(string $name, callable $method): AppInterface;
 }
@@ -55,7 +54,7 @@ interface DBInterface
 
 interface HTTPInterface
 {
-    public function handleResponse(Response $response, ?string $redirectURL = null): void;
+    public function handleResponse(ResponseInterface $response, ?string $redirectURL = null): void;
 }
 
 interface InjectionInterface extends ContainerInterface
@@ -147,7 +146,26 @@ interface ResultInterface
      * @param array<string, string> $headers
      */
     public function redirect(callable $method, array $data = [], ?int $responseCode = null, $headers = []): ResultInterface;
-    public function getResponse(): Response;
+    public function isRedirect(): bool;
+    /**
+     * @param array<string, mixed> $data
+     */
+    public function withData(array $data): ResultInterface;
+    /**
+     * @param array<string, string> $headers
+     */
+    public function withHeaders(array $headers): ResultInterface;
+    public function withResponseCode(int $responseCode): ResultInterface;
+    /**
+     * @return array<string, mixed>
+     */
+    public function getData(): array;
+    /**
+     * @return array<string, string> $headers
+     */
+    public function getHeaders(): array;
+    public function getResponseCode(): int;
+    public function applyHeadersToResponse(ResponseInterface $response, RoutingInterface $routing): ResponseInterface;
 }
 
 interface SQLInterface
@@ -235,5 +253,5 @@ interface ViewsInterface
      * @param array<string, mixed> $methodData
      * @param array<string, mixed> $globalData
      */
-    public function render(string $controllerName, string $methodName, array $methodData, array $globalData, RoutingInterface $routing): void;
+    public function render(string $controllerName, string $methodName, array $methodData, array $globalData, ResponseInterface $response): ResponseInterface;
 }

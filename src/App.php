@@ -2,7 +2,7 @@
 
 namespace Krag;
 
-use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
 
 class App implements AppInterface
 {
@@ -18,6 +18,7 @@ class App implements AppInterface
         protected InjectionInterface $injection,
         protected ViewsInterface $views,
         protected HTTPInterface $http,
+        protected RoutingInterface $routing,
         protected string $controllerPath = 'controllers',
         protected array $globalFetchers = [],
     ) {
@@ -63,28 +64,33 @@ class App implements AppInterface
     protected function requestIn(ServerRequestInterface $request, RoutingInterface $routing): mixed
     {
         $method = $routing->method() ?? fn () => [];
-        $response = [];
+        $methodData = [];
         if (is_callable($method)) {
-            $response = $this->getMethodData($method, $request);
+            $methodData = $this->getMethodData($method, $request);
         }
-        return [$response, $method];
+        return [$methodData, $method];
     }
 
-    protected function responseOut(mixed $response, callable $method, ServerRequestInterface $request, RoutingInterface $routing): void
+    protected function startingResponse(): ResponseInterface
     {
-        [$controllerName, $methodName] = (is_array($method)) ? [$method[0], $method[1]] : [static::class, 'notFound'];
-        if ($response instanceof Response) {
-            $redirectURL = null;
-            if ($response->isRedirect) {
-                $redirectURL = $routing->link($method, $response->data);
+        return $this->injection->get(ResponseInterface::class);
+    }
+
+    protected function responseOut(mixed $methodReturned, callable $method, ServerRequestInterface $request, RoutingInterface $routing): ResponseInterface
+    {
+        $response = $this->startingResponse();
+        if ($methodReturned instanceof ResultInterface) {
+            $response = $methodReturned->applyHeadersToResponse($response, $routing);
+            if ($methodReturned->isRedirect()) {
+                return $response;
             }
-            $this->http->handleResponse($response, $redirectURL);
+            $methodData = $methodReturned->getData();
+        } else {
+            $methodData = $methodReturned;
         }
-        if (is_array($response) || ($response instanceof Response && !$response->isRedirect)) {
-            $methodData = is_array($response) ? $response : $response->data;
-            $globalData = $this->processGlobalFetchers($request);
-            $this->views->render($controllerName, $methodName, $methodData, $globalData, $routing);
-        }
+        [$controllerName, $methodName] = (is_array($method)) ? [$method[0], $method[1]] : [static::class, 'notFound'];
+        $globalData = $this->processGlobalFetchers($request);
+        return $this->views->render($controllerName, $methodName, $methodData, $globalData, $response);
     }
 
     public function setGlobalFetcher(string $name, callable $method): App
@@ -109,11 +115,15 @@ class App implements AppInterface
         return $this;
     }
 
-    //FIXME: implement \Psr\Http\Server\RequestHandlerInterface;
-
-    public function run(ServerRequestInterface $request, RoutingInterface $routing): void
+    public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        [$response, $method] = $this->requestIn($request, $routing);
-        $this->responseOut($response, $method, $request, $routing);
+        [$methodReturned, $method] = $this->requestIn($request, $this->routing);
+        return $this->responseOut($methodReturned, $method, $request, $this->routing);
+    }
+
+    public function run(ServerRequestInterface $request): void
+    {
+        $response = $this->handle($request);
+        print($response->getBody()->getContents());
     }
 }

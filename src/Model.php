@@ -4,11 +4,11 @@ namespace Krag;
 
 class Model implements ModelInterface
 {
-    public function __construct(private SQLInterface $sql, private ?string $table = null)
+    private string $table;
+
+    public function __construct(private SQLInterface $sql, ?string $table = null)
     {
-        if (!$table) {
-            $this->table = strtolower(static::class);
-        }
+        $this->table = $table ?? strtolower(static::class);
     }
 
     /**

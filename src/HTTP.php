@@ -2,14 +2,17 @@
 
 namespace Krag;
 
+use Psr\Http\Message\ResponseInterface;
+
 class HTTP implements HTTPInterface
 {
     public function __construct()
     {
     }
 
-    public function handleResponse(Response $response, ?string $redirectURL = null): void
+    public function handleResponse(ResponseInterface $response, ?string $redirectURL = null): void
     {
+        /*
         if (is_int($response->responseCode)) {
             http_response_code($response->responseCode);
         }
@@ -19,5 +22,6 @@ class HTTP implements HTTPInterface
         foreach ($response->headers as $k => $v) {
             header($k.': '.$v);
         }
+         */
     }
 }

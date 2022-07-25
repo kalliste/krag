@@ -78,20 +78,3 @@ class LogEntry
         $this->time = (is_null($time)) ? time() : $time;
     }
 }
-
-class Response
-{
-    /**
-     * @param array<string, mixed> $data
-     * @param ?int $responseCode
-     * @param array<string, string> $headers
-     */
-    public function __construct(
-        public array $data = [],
-        public ?int $responseCode = null,
-        public array $headers = [],
-        public bool $isRedirect = false,
-        public mixed $redirectMethod = null,
-    ) {
-    }
-}
