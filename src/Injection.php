@@ -64,19 +64,25 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         $this->logger = $logger;
     }
 
-    public function setLeader(ContainerInterface $injection): void
+    private function setLeaderFollowerSanityCheck(?ContainerInterface $injection, ?ContainerInterface $other): void
     {
-        if ($this->follower instanceof Injection) {
+        if ($injection == $this) {
+            throw new \InvalidArgumentException("Can't set an injection object to lead itself.");
+        }
+        if ($other) {
             throw new \InvalidArgumentException("Can't set both leader and follower of type Injection; pick a direction to chain.");
         }
+    }
+
+    public function setLeader(?ContainerInterface $injection): void
+    {
+        $this->setLeaderFollowerSanityCheck($injection, $this->follower);
         $this->leader = $injection;
     }
 
-    public function setFollower(ContainerInterface $injection): void
+    public function setFollower(?ContainerInterface $injection): void
     {
-        if ($this->leader instanceof Injection) {
-            throw new \InvalidArgumentException("Can't set both leader and follower of type Injection; pick a direction to chain.");
-        }
+        $this->setLeaderFollowerSanityCheck($injection, $this->leader);
         $this->follower = $injection;
     }
 
@@ -108,6 +114,27 @@ class Injection implements InjectionInterface, LoggerAwareInterface
             }
         }
         return $this;
+    }
+
+    public function clone(mixed ...$withValues): Injection
+    {
+        $this->trace('Injection clone');
+        $args = array_diff_key($withValues, ['singletons' => '', 'classMappings' => '', 'logger' => '']);
+        $injection = new (static::class)(...$args);
+        $injection->setLogger($withValues['logger'] ?? $this->logger);
+        foreach ($this->singletons as $class => $obj) {
+            $injection->setSingleton($class, $obj);
+        }
+        foreach ($this->classMappings as $fromClass => $toClass) {
+            $injection->setClassMapping($fromClass, $toClass);
+        }
+        foreach ($withValues['singletons'] ?? [] as $class => $obj) {
+            $injection->setSingleton($class, $obj);
+        }
+        foreach ($withValues['classMappings'] ?? [] as $fromClass => $toClass) {
+            $injection->setClassMapping($fromClass, $toClass);
+        }
+        return $injection;
     }
 
     /**
@@ -185,7 +212,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         array $withValues,
         bool $preferProvided = false,
     ): mixed {
-        $type = strval($rParam->getType());
+        $type = ltrim(strval($rParam->getType()), '?');
         $name = $rParam->getName();
         $this->trace("makeArgumentForParameter(type: $type, name: $name)");
         $arg = null;
