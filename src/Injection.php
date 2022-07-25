@@ -10,6 +10,7 @@ use Psr\Log\LoggerAwareInterface;
 class Injection implements InjectionInterface, LoggerAwareInterface
 {
     private ?ContainerInterface $leader = null;
+    private ?ContainerInterface $follower = null;
     public \Psr\Log\LoggerInterface $logger;
 
     /**
@@ -66,6 +67,11 @@ class Injection implements InjectionInterface, LoggerAwareInterface
     public function setLeader(ContainerInterface $injection): void
     {
         $this->leader = $injection;
+    }
+
+    public function setFollower(ContainerInterface $injection): void
+    {
+        $this->follower = $injection;
     }
 
     public function setSingleton(string $class, ?object $obj = null): InjectionInterface
@@ -133,8 +139,27 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return ($rParam->isOptional()) ? $rParam->getDefaultValue() : null;
     }
 
-    protected function makeArgumentFallback(\ReflectionParameter $rParam): mixed
-    {
+    /**
+     * @param array<int|string, mixed> $withValues
+     */
+    protected function makeArgumentFallback(
+        \ReflectionParameter $rParam,
+        int $position,
+        array $withValues,
+        bool $preferProvided = false,
+    ): mixed {
+        if ($this->follower) {
+            try {
+                if ($this->follower instanceof InjectionInterface) {
+                    $obj = $this->follower->makeArgumentForParameter($rParam, $position, $withValues, $preferProvided);
+                } else {
+                    $type = strval($rParam->getType());
+                    $obj = $this->follower->get($type);
+                }
+                return $obj;
+            } catch (NotFoundExceptionInterface $e) {
+            }
+        }
         return null;
     }
 
@@ -161,7 +186,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         }
         $arg = $arg ?? $this->makeArgumentFromDefaultValue($rParam);
         if (!$rParam->isOptional()) {
-            $arg = $arg ?? $this->makeArgumentFallback($rParam);
+            $arg = $arg ?? $this->makeArgumentFallback($rParam, $position, $withValues, $preferProvided);
         }
         return $arg;
     }

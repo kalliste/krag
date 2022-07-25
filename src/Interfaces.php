@@ -70,6 +70,15 @@ interface InjectionInterface extends ContainerInterface
     public function call(callable $method, array $withValues = [], bool $preferProvided = false): mixed;
     public function setSingleton(string $class, ?object $obj = null): InjectionInterface;
     public function setClassMapping(string $fromClass, string $toClass): InjectionInterface;
+    /**
+     * @param array<int|string, mixed> $withValues
+     */
+    protected function makeArgumentForParameter(
+        \ReflectionParameter $rParam,
+        int $position,
+        array $withValues,
+        bool $preferProvided = false
+    ): mixed;
 }
 
 interface LogInterface extends \Psr\Log\LoggerInterface

@@ -4,9 +4,17 @@ namespace Krag;
 
 class LegacyInjection extends Injection
 {
-    protected function makeArgumentFallback(\ReflectionParameter $rParam): mixed
-    {
-        return match (strval($rParam->getType())) {
+    /**
+     * @param array<int|string, mixed> $withValues
+     */
+    protected function makeArgumentFallback(
+        \ReflectionParameter $rParam,
+        int $position,
+        array $withValues,
+        bool $preferProvided = false,
+    ): mixed {
+        $obj = parent::makeArgumentFallback($rParam, $position, $withValues, $preferProvided);
+        $obj = $obj ?? match (strval($rParam->getType())) {
             '' => '',
             'string' => '',
             'int' => 0,
@@ -14,5 +22,6 @@ class LegacyInjection extends Injection
             'bool' => false,
             default => ''
         };
+        return $obj;
     }
 }
