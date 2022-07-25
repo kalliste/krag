@@ -264,33 +264,6 @@ class Injection implements InjectionInterface, LoggerAwareInterface
     /**
      * @param array<int|string, mixed> $withValues
      */
-    protected function makeNew(string $class, array $withValues = [], bool $preferProvided = false): ?object
-    {
-        $this->trace("makeNew $class");
-        $rClass = new \ReflectionClass($class);
-        $rConstructor = $rClass->getConstructor();
-        $passArguments = $this->makeArguments($rConstructor, $withValues, $preferProvided);
-        return $rClass->newInstanceArgs($passArguments);
-    }
-
-    /**
-     * @param array<int|string, mixed> $withValues
-     */
-    protected function postMakeNew(string $class, array $withValues, object $obj): void
-    {
-        if ($obj instanceof \Psr\Log\LoggerAwareInterface) {
-            $logger = $this->get('Log');
-            $logger->setLogger($this->logger);
-            $obj->setLogger($logger);
-        }
-        if (array_key_exists($class, $this->singletons)) {
-            $this->singletons[$class] = $obj;
-        }
-    }
-
-    /**
-     * @param array<int|string, mixed> $withValues
-     */
     protected function getFromContainer(?ContainerInterface $container, string $id, array $withValues, bool $preferProvided): mixed
     {
         if ($container) {
@@ -327,6 +300,33 @@ class Injection implements InjectionInterface, LoggerAwareInterface
             return $this->singletons[$class];
         }
         return null;
+    }
+
+    /**
+     * @param array<int|string, mixed> $withValues
+     */
+    protected function makeNew(string $class, array $withValues = [], bool $preferProvided = false): ?object
+    {
+        $this->trace("makeNew $class");
+        $rClass = new \ReflectionClass($class);
+        $rConstructor = $rClass->getConstructor();
+        $passArguments = $this->makeArguments($rConstructor, $withValues, $preferProvided);
+        return $rClass->newInstanceArgs($passArguments);
+    }
+
+    /**
+     * @param array<int|string, mixed> $withValues
+     */
+    protected function postMakeNew(string $class, array $withValues, object $obj): void
+    {
+        if ($obj instanceof \Psr\Log\LoggerAwareInterface) {
+            $logger = $this->get('Log');
+            $logger->setLogger($this->logger);
+            $obj->setLogger($logger);
+        }
+        if (array_key_exists($class, $this->singletons)) {
+            $this->singletons[$class] = $obj;
+        }
     }
 
     /**
