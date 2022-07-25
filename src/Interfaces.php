@@ -63,11 +63,11 @@ interface InjectionInterface extends ContainerInterface
     /**
      * @param array<int|string, mixed> $withValues
      */
-    public function get(string $id, array $withValues = []);
+    public function get(string $id, array $withValues = [], bool $preferProvided = true);
     /**
      * @param array<int|string, mixed> $withValues
      */
-    public function call(callable $method, array $withValues = []): mixed;
+    public function call(callable $method, array $withValues = [], bool $preferProvided = false): mixed;
     public function setSingleton(string $class, ?object $obj = null): InjectionInterface;
     public function setClassMapping(string $fromClass, string $toClass): InjectionInterface;
 }
