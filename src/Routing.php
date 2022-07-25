@@ -26,6 +26,9 @@ class Routing implements RoutingInterface
         return null;
     }
 
+    /**
+     * @param array<mixed, mixed> $data
+     */
     public function link(callable $target, array $data = []): string
     {
         $fromCurrent = $this->request->getServerParams()['REQUEST_URI'] ?? '';

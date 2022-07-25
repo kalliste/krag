@@ -11,6 +11,10 @@ class Injection implements InjectionInterface, LoggerAwareInterface
     private ?InjectionInterface $leader = null;
     public \Psr\Log\LoggerInterface $logger;
 
+    /**
+     * @param array<int, string>|array<string, null|object> $singletons
+     * @param array<string, string> $classMappings
+     */
     public function __construct(
         protected array $singletons = [],
         protected array $classMappings = [],
@@ -23,7 +27,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         $this->logger = $logger ?? new Log();
     }
 
-    protected function setDefaultClassMappings()
+    protected function setDefaultClassMappings(): void
     {
         $this->setClassMapping('Request', 'Krag\Request', 'Krag');
         $this->setClassMapping('Response', 'Krag\Response', 'Krag');
@@ -80,6 +84,9 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return $this;
     }
 
+    /**
+     * @param array<int|string, mixed> $withValues
+     */
     protected function matchParamToValues(int $position, string $name, array $withValues): mixed
     {
         $this->logger->debug("matchParamToValues($position, $name, [".implode(', ', array_keys($withValues))."])");
@@ -97,6 +104,9 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return null;
     }
 
+    /**
+     * @param array<int|string, mixed> $withValues
+     */
     protected function makeArgumentForParameter(
         \ReflectionParameter $rParam,
         int $position,
@@ -125,6 +135,10 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return $arg;
     }
 
+    /**
+     * @param array<int|string, mixed> $withValues
+     * @return array<int|string, mixed>
+     */
     protected function makeArguments(
         \ReflectionFunctionAbstract $rMethod,
         array $withValues = [],
@@ -142,7 +156,10 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return $passArguments;
     }
 
-    protected function postMakeNew(string $class, array $withValues, object $obj)
+    /**
+     * @param array<int|string, mixed> $withValues
+     */
+    protected function postMakeNew(string $class, array $withValues, object $obj): void
     {
         if ($obj instanceof \Psr\Log\LoggerAwareInterface) {
             $logger = $this->get('Log');
@@ -154,6 +171,9 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         }
     }
 
+    /**
+     * @param array<int|string, mixed> $withValues
+     */
     protected function makeNew(string $class, array $withValues = []): ?object
     {
         $rClass = new \ReflectionClass($class);
@@ -162,6 +182,9 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return $rClass->newInstanceArgs($passArguments);
     }
 
+    /**
+     * @param array<int|string, mixed> $withValues
+     */
     public function get(string $id, array $withValues = [])
     {
         if ($this->leader) {
@@ -191,6 +214,9 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return array_key_exists($id, $this->classMappings);
     }
 
+    /**
+     * @param array<int|string, mixed> $withValues
+     */
     public function call(callable $method, array $withValues = []): mixed
     {
         $rMethod = new \ReflectionFunction($method);

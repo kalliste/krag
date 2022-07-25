@@ -8,7 +8,7 @@ class HTTP implements HTTPInterface
     {
     }
 
-    public function handleResponse(Response $response, ?string $redirectURL = null)
+    public function handleResponse(Response $response, ?string $redirectURL = null): void
     {
         if (is_int($response->responseCode)) {
             http_response_code($response->responseCode);

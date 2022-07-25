@@ -4,6 +4,9 @@ namespace Krag;
 
 class TwigViews implements ViewsInterface
 {
+    /**
+     * @param array<string, mixed> $templateOptions
+     */
     public function __construct(
         protected string $templatePath = 'templates',
         protected array $templateOptions = [
@@ -26,13 +29,20 @@ class TwigViews implements ViewsInterface
         return new \Twig\Environment($loader, $this->templateOptions);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     protected function fillTemplate(string $controllerName, string $methodName, array $data): string
     {
         $engine = $this->setupTemplateEngine($controllerName, $methodName);
         return $engine->render($this->templateFile($controllerName, $methodName), $data);
     }
 
-    public function render(string $controllerName, string $methodName, array $methodData, array $globalData, RoutingInterface $routing)
+    /**
+     * @param array<string, mixed> $methodData
+     * @param array<string, mixed> $globalData
+     */
+    public function render(string $controllerName, string $methodName, array $methodData, array $globalData, RoutingInterface $routing): void
     {
         $content = $this->fillTemplate($controllerName, $methodName, array_merge($globalData, $methodData));
         print($content);

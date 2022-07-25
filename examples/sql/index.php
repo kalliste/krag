@@ -4,4 +4,3 @@ require_once(dirname(__FILE__).'/../Environment.php');
 
 $k = getInjection();
 $sql = $k->get('SQL');
-

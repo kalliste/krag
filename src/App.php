@@ -6,8 +6,14 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class App implements AppInterface
 {
+    /**
+     * @var array<string, array<int, string>>
+     */
     protected array $controllers = [];
 
+    /**
+     * @param array<string, callable> $globalFetchers
+     */
     public function __construct(
         protected InjectionInterface $injection,
         protected ViewsInterface $views,
@@ -17,6 +23,9 @@ class App implements AppInterface
     ) {
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function processGlobalFetchers(ServerRequestInterface $request): array
     {
         $requestData = array_merge($request->getQueryParams(), $request->getParsedBody());
@@ -61,7 +70,7 @@ class App implements AppInterface
         return [$response, $method];
     }
 
-    protected function responseOut(mixed $response, callable $method, ServerRequestInterface $request, RoutingInterface $routing)
+    protected function responseOut(mixed $response, callable $method, ServerRequestInterface $request, RoutingInterface $routing): void
     {
         [$controllerName, $methodName] = (is_array($method)) ? [$method[0], $method[1]] : [static::class, 'notFound'];
         if ($response instanceof Response) {
@@ -102,7 +111,7 @@ class App implements AppInterface
 
     //FIXME: implement \Psr\Http\Server\RequestHandlerInterface;
 
-    public function run(ServerRequestInterface $request, RoutingInterface $routing)
+    public function run(ServerRequestInterface $request, RoutingInterface $routing): void
     {
         [$response, $method] = $this->requestIn($request, $routing);
         $this->responseOut($response, $method, $request, $routing);

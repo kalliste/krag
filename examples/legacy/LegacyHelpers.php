@@ -2,7 +2,10 @@
 
 use Krag\Result;
 
-function app_redirect($action = "index", $vars = []): Result
+/**
+ * @param array<string, mixed> $vars
+ */
+function app_redirect(string $action = "index", $vars = []): Result
 {
     return (new Result($vars))->redirect($action);
 }

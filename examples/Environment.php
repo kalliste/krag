@@ -24,11 +24,17 @@ class ExampleConfig extends Krag\Config
     public string $dbUsername;
     public string $dbPassword;
 
+    /**
+     * @param array<int|string, mixed> $defaultSettings
+     */
     public function __construct(array $defaultSettings = [], string $configFile = 'config.php')
     {
         parent::__construct($defaultSettings, $configFile);
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function databaseConfig(): array
     {
         return [

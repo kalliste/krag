@@ -5,12 +5,20 @@ namespace Krag;
 class Result implements ResultInterface
 {
     private bool $isRedirect = false;
-    private $redirectMethod;
+    private mixed $redirectMethod;
 
+    /**
+     * @param array<mixed, mixed> $data
+     * @param array<string, string> $headers
+     */
     public function __construct(private array $data = [], private ?int $responseCode = null, private $headers = [])
     {
     }
 
+    /**
+     * @param array<mixed, mixed> $data
+     * @param array<string, string> $headers
+     */
     public function redirect(callable $method, array $data = [], ?int $responseCode = null, $headers = []): Result
     {
         $this->isRedirect = true;

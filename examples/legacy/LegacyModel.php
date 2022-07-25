@@ -4,21 +4,39 @@ namespace Krag;
 
 class LegacyModel extends StaticModel
 {
-    public static function values($column, $conditions = [])
+    /**
+     * @param array<string, mixed> $conditions
+     * @return array<int, mixed>
+     */
+    public static function values(string $column, array $conditions = []): array
     {
         return self::list($column, $conditions);
     }
 
-    public static function hash($key_column, $value_column, $conditions = [], $paging_params = false)
+    /**
+     * @param array<string, mixed> $conditions
+     * @param array<string, mixed>|bool $paging_params
+     * @return array<mixed, mixed>
+     */
+    public static function hash(string $key_column, string $value_column, array $conditions = [], array|bool $paging_params = []): array
     {
+        if (!$paging_params) {
+            $paging_params = [];
+        }
         return self::map($key_column, $value_column, $conditions, $paging_params);
     }
 
-    public static function blob($column, $conditions, $blob)
+    /**
+     * @param array<string, mixed> $conditions
+     */
+    public static function blob(string $column, array $conditions, string $blob): void
     {
         static::sql()->setBlob(static::table(), $column, $blob, $conditions);
     }
 
+    /**
+     * @param array<string, mixed> $conditions
+     */
     public static function update($conditions, $newdata): int
     {
         if (!is_array($conditions)) {
@@ -27,7 +45,10 @@ class LegacyModel extends StaticModel
         return static::sql()->update(static::table(), $conditions, $newdata);
     }
 
-    public static function insert(array $records, $y = ''): int
+    /**
+     * @param array<mixed, mixed> $records
+     */
+    public static function insert(array $records, mixed $y = ''): int
     {
         if (is_array($y)) {
             $conditions = $records;

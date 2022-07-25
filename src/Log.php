@@ -2,8 +2,14 @@
 
 namespace Krag;
 
+/**
+ * @implements \IteratorAggregate<int, LogEntry>
+ */
 class Log implements LogInterface, \Psr\Log\LoggerAwareInterface, \IteratorAggregate
 {
+    /**
+     * @var array<int, LogEntry>
+     */
     private array $messages = [];
     public ?\Psr\Log\LoggerInterface $leader = null;
 
@@ -18,7 +24,10 @@ class Log implements LogInterface, \Psr\Log\LoggerAwareInterface, \IteratorAggre
         $this->leader = $logger;
     }
 
-    public function getIterator(): \Traversable
+    /**
+     * @return \ArrayIterator<int, LogEntry>
+     */
+    public function getIterator(): \ArrayIterator
     {
         return new \ArrayIterator($this->messages);
     }
@@ -41,6 +50,9 @@ class Log implements LogInterface, \Psr\Log\LoggerAwareInterface, \IteratorAggre
         }
     }
 
+    /**
+     * @return array<int, LogEntry>
+     */
     public function filter(LogLevel $minLevel = LogLevel::DEBUG, ?string $component = null): array
     {
         $ret = [];
@@ -54,6 +66,9 @@ class Log implements LogInterface, \Psr\Log\LoggerAwareInterface, \IteratorAggre
         return $ret;
     }
 
+    /**
+     * @param array<int|string, mixed> $data
+     */
     public function trace(\Stringable|string $message, array $data = [], ?string $component = null): void
     {
         $this->log(LogLevel::TRACE, $message, $data, $component);

@@ -15,7 +15,7 @@ class SQL implements SQLInterface
 
     /************************************************************************/
 
-    protected function fieldValue(string $key, $value, ?string $table = null, string $operator = '='): string
+    protected function fieldValue(string $key, mixed $value, ?string $table = null, string $operator = '='): string
     {
         $key = $this->db->columnEscape($key);
         $value = $this->db->escape($value);
@@ -26,6 +26,9 @@ class SQL implements SQLInterface
         return $key.$operator."'".$value."'";
     }
 
+    /**
+     * @param array<string, mixed> $conditions
+     */
     protected function fieldsValues(array $conditions, ?string $table = null, string $operator = '='): string
     {
         $ret = '';
@@ -38,6 +41,9 @@ class SQL implements SQLInterface
         return $ret;
     }
 
+    /**
+     * @return array<int, string>
+     */
     protected function splitByComma(string $str): array
     {
         return array_diff(array_map(trim(...), explode(',', $str)), ['']);
@@ -45,6 +51,9 @@ class SQL implements SQLInterface
 
     /************************************************************************/
 
+    /**
+     * @param string|array<int|string, string> $fields
+     */
     public function select(string|array $fields = [], ?string $table = null): SQL
     {
         $ret = '';
@@ -135,6 +144,9 @@ class SQL implements SQLInterface
         return $this;
     }
 
+    /**
+     * @param array<string, mixed> $conditions
+     */
     public function where(array $conditions = [], ?string $table = null, string $operator = ''): SQL
     {
         if (count($conditions)) {
@@ -176,6 +188,9 @@ class SQL implements SQLInterface
         return $this->where(array($column => $value), $table, '>=');
     }
 
+    /**
+     * @param string|array<int|string, string> $groupBy
+     */
     public function group(string|array $groupBy): SQL
     {
         $cols = (is_array($groupBy)) ? $groupBy : array($groupBy);
@@ -190,7 +205,10 @@ class SQL implements SQLInterface
         return ($maybeDesc) ? $sort.' DESC' : $sort.' ';
     }
 
-    public function order(string $sort, ?string $maybeDesc = null, ...$more): SQL
+    /**
+     * @param array<string, mixed> $more
+     */
+    public function order(string $sort, ?string $maybeDesc = null, array $more = []): SQL
     {
         $ret = ' ORDER BY '.$this->orderPart($sort, $maybeDesc);
         $moreSorts = [];
@@ -210,7 +228,7 @@ class SQL implements SQLInterface
         return $this;
     }
 
-    public function random() : SQL
+    public function random(): SQL
     {
         $this->query .= ' '.$this->db->randomFuncSQL.' ';
         return $this;
@@ -225,6 +243,9 @@ class SQL implements SQLInterface
         return $this;
     }
 
+    /**
+     * @param array<string, mixed> $pagingParams
+     */
     public function orderLimit(array $pagingParams): SQL
     {
         $ret = $this;
@@ -233,7 +254,7 @@ class SQL implements SQLInterface
             $maybeDesc = $pagingParams['order'] ?? null;
             $more = array_filter(
                 $pagingParams,
-                fn($k) => (
+                fn ($k) => (
                     ('sort' == substr($k, 0, 4)) && (intval(substr($k, 4)) > 0) ||
                     ('order' == substr($k, 0, 4)) && (intval(substr($k, 4)) > 0)
                 )
@@ -257,6 +278,9 @@ class SQL implements SQLInterface
         return $row[0];
     }
 
+    /**
+     * @return array<int, mixed>
+     */
     public function list(): array
     {
         $result = $this->db->query($this->query);
@@ -267,12 +291,18 @@ class SQL implements SQLInterface
         return $ret;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function assoc(): array
     {
         $result = $this->db->query($this->query);
         return $this->db->fetchAssoc($result);
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function assocList(): array
     {
         $result = $this->db->query($this->query);
@@ -283,6 +313,9 @@ class SQL implements SQLInterface
         return $ret;
     }
 
+    /**
+     * @return array<mixed, mixed>
+     */
     public function map(): array
     {
         $result = $this->db->query($this->query);
@@ -299,6 +332,9 @@ class SQL implements SQLInterface
     // probably by making them have to be at the end of the chain.
     // Also be sure to allow INSERT SELECT
 
+    /**
+     * @param array<string, mixed>|array<int|string, array<string, mixed>> $records
+     */
     public function insert(string $table, array $records): int
     {
         if (count($records)) {
@@ -320,6 +356,10 @@ class SQL implements SQLInterface
         return 0;
     }
 
+    /**
+     * @param array<string, mixed> $conditions
+     * @param array<string, mixed> $newData
+     */
     public function update(string $table, array $conditions, array $newData): int
     {
         if (count($newData)) {
@@ -333,6 +373,9 @@ class SQL implements SQLInterface
         return 0;
     }
 
+    /**
+     * @param array<string, mixed> $conditions
+     */
     public function delete(string $table, array $conditions = []): int
     {
         $table = $this->db->tableEscape($table);
@@ -342,6 +385,10 @@ class SQL implements SQLInterface
         return $this->db->affectedRows($result);
     }
 
+    /**
+     * @param array<string, mixed> $conditions
+     * @param array<string, mixed>|array<int|string, array<string, mixed>> $records
+     */
     public function replace(string $table, array $conditions, array $records): int
     {
         $this->db->begin();
@@ -351,6 +398,9 @@ class SQL implements SQLInterface
         return $affected;
     }
 
+    /**
+     * @param array<string, mixed> $conditions
+     */
     public function setBlob(string $table, string $column, string $blob, array $conditions = []): int
     {
         $table = $this->db->tableEscape($table);

@@ -14,7 +14,11 @@ class Views implements ViewsInterface
         return $this->templatePath.\DIRECTORY_SEPARATOR.$controllerName.\DIRECTORY_SEPARATOR.$methodName.'.html.php';
     }
 
-    public function render(string $controllerName, string $methodName, array $methodData, array $globalData, RoutingInterface $routing)
+    /**
+     * @param array<string, mixed> $methodData
+     * @param array<string, mixed> $globalData
+     */
+    public function render(string $controllerName, string $methodName, array $methodData, array $globalData, RoutingInterface $routing): void
     {
         extract($globalData);
         extract($methodData);

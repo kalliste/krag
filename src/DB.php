@@ -22,7 +22,7 @@ class DB implements DBInterface
         $this->setDatabaseParameters($type);
     }
 
-    protected function makeDSN(string $type, string $host, string $database)
+    protected function makeDSN(string $type, string $host, string $database): string
     {
         $ret = $type.':';
         $ret .= ($host) ? 'host='.$host : '';
@@ -30,7 +30,7 @@ class DB implements DBInterface
         return $ret;
     }
 
-    protected function setDatabaseParameters(string $type)
+    protected function setDatabaseParameters(string $type): void
     {
         switch ($type) {
             case 'mysql':
@@ -67,7 +67,7 @@ class DB implements DBInterface
         return $this->conn->rollBack();
     }
 
-    private function logAnyError(\PDO|\PDOStatement $obj)
+    private function logAnyError(\PDO|\PDOStatement $obj): void
     {
         if ($obj->errorCode() != '00000') {
             if (is_object($this->log)) {
@@ -91,11 +91,17 @@ class DB implements DBInterface
         return $result;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function fetchAssoc(object $result): array
     {
         return $result->fetch(\PDO::FETCH_ASSOC);
     }
 
+    /**
+     * @return array<int, mixed>
+     */
     public function fetchRow(object $result): array
     {
         return $result->fetch(\PDO::FETCH_NUM);
@@ -116,6 +122,10 @@ class DB implements DBInterface
         return $result->rowCount();
     }
 
+    /**
+     * @param string|array<mixed> $toEscape
+     * @return string|array<mixed>
+     */
     public function escape(string|array $toEscape): string|array
     {
         if (is_array($toEscape)) {
@@ -136,6 +146,9 @@ class DB implements DBInterface
         return $cl.$this->noSpecials($toEscape).$cr;
     }
 
+    /**
+     * @param string|array<mixed> $toEscape
+     */
     public function columnEscape(string|array $toEscape, ?string $table = null): string
     {
         $cl = $this->columnQuoteCharLeft;

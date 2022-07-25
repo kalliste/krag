@@ -65,6 +65,9 @@ class LogEntry
 {
     public int $time;
 
+    /**
+     * @param array<int|string, mixed> $context
+     */
     public function __construct(
         public LogLevel $level,
         public string $message,
@@ -78,10 +81,15 @@ class LogEntry
 
 class Response
 {
+    /**
+     * @param array<string, mixed> $data
+     * @param ?int $responseCode
+     * @param array<string, string> $headers
+     */
     public function __construct(
         public array $data = [],
         public ?int $responseCode = null,
-        public $headers = [],
+        public array $headers = [],
         public bool $isRedirect = false,
         public mixed $redirectMethod = null,
     ) {
