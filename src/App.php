@@ -2,7 +2,7 @@
 
 namespace Krag;
 
-use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
+use Psr\Http\Message\{StreamFactoryInterface, ResponseFactoryInterface, ResponseInterface, ServerRequestInterface};
 use Psr\Log\LoggerInterface;
 
 class App implements AppInterface
@@ -19,6 +19,8 @@ class App implements AppInterface
         protected InjectionInterface $injection,
         protected ViewsInterface $views,
         protected HTTPInterface $http,
+        protected ResponseFactoryInterface $responseFactory,
+        protected StreamFactoryInterface $streamFactory,
         protected RoutingInterface $routing,
         protected LoggerInterface $log,
         protected string $controllerPath = 'controllers',
@@ -75,7 +77,8 @@ class App implements AppInterface
 
     protected function startingResponse(): ResponseInterface
     {
-        return $this->injection->get(ResponseInterface::class);
+        $body = $this->streamFactory->createStream();
+        return $this->responseFactory->createResponse()->withBody($body);
     }
 
     protected function responseOut(mixed $methodReturned, callable $method, ServerRequestInterface $request, RoutingInterface $routing): ResponseInterface
@@ -125,7 +128,6 @@ class App implements AppInterface
 
     public function run(ServerRequestInterface $request): void
     {
-        $this->log->debug("App run");
         $response = $this->handle($request);
         $this->http->sendHeaders($response);
         $this->http->printBody($response);

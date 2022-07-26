@@ -22,6 +22,6 @@ class HTTP implements HTTPInterface
 
     public function printBody(ResponseInterface $response): void
     {
-        print($response->getBody()->getContents());
+        print(strval($response->getBody()));
     }
 }

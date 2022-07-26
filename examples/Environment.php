@@ -53,8 +53,8 @@ class ExampleConfig extends Krag\Config
 
 function getInjection(): Injection
 {
-    $logger = new Logger;
-    $logger->handler (
+    $logger = new Logger();
+    $logger->handler(
         LevelBuffer::init(
             Stderr::init(),
             Analog::INFO
