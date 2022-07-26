@@ -26,12 +26,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
     */
     protected function trace(\Stringable|string $message, array $data = [], ?string $component = null): void
     {
-        if ($this->logger instanceof KragLogInterface) {
-            $component = (is_null($component)) ? static::class : $component;
-            $this->logger->trace($message, $data, $component);
-        } else {
-            $this->logger->debug($message, $data);
-        }
+        $this->logger->debug($message, $data);
     }
 
     protected function setDefaultMappings(): void
@@ -41,13 +36,12 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         $this->setMapping(['DB', 'Krag\DB', 'Krag\DBInterface'], 'Krag\DB');
         $this->setMapping(['HTTP', 'Krag\HTTP', 'Krag\HTTPInterface'], 'Krag\HTTP');
         $this->setMapping(['Injection', 'Krag\Injection', 'Krag\InjectionInterface'], 'Krag\Injection');
-        $this->setMapping(['Log', 'Krag\Log', 'Krag\KragLogInterface', 'Psr\Log\LoggerInterface', 'LoggerInterface'], 'Krag\Log');
         $this->setMapping(['Request', 'Krag\Request', 'Krag\RequestInterface'], 'Krag\Request');
         $this->setMapping(['Result', 'Krag\Result', 'Krag\ResultInterface'], 'Krag\Result');
-        $this->setMapping(['LogEntry', 'Krag\LogEntry', 'Krag\LogEntryInterface'], 'Krag\LogEntry');
         $this->setMapping(['Result', 'Krag\Result', 'Krag\ResultInterface'], 'Krag\Result');
         $this->setMapping(['SQL', 'Krag\SQL', 'Krag\SQLInterface'], 'Krag\SQL');
         $this->setMapping(['Views', 'Krag\Views', 'Krag\ViewsInterface'], 'Krag\Views');
+        $this->setMapping(['Psr\Log\LoggerInterface', 'LoggerInterface'], $this->logger);
     }
 
     public function setLogger(\Psr\Log\LoggerInterface $logger): void

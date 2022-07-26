@@ -2,6 +2,8 @@
 
 namespace Krag;
 
+use Psr\Log\LoggerInterface;
+
 class DB implements DBInterface
 {
     private \PDO $conn;
@@ -15,7 +17,7 @@ class DB implements DBInterface
         string $host = '',
         string $username = '',
         string $password = '',
-        private ?KragLogInterface $log = null,
+        private ?LoggerInterface $log = null,
     ) {
         $dsn = $this->makeDSN($type, $host, $database);
         $this->conn = new \PDO($dsn, $username, $password);

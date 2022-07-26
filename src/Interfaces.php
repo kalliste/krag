@@ -74,26 +74,6 @@ interface InjectionInterface extends ContainerInterface
     public function setMapping(string|array $from, object|callable|string $to): InjectionInterface;
 }
 
-interface KragLogInterface extends \Psr\Log\LoggerInterface
-{
-    /**
-     * @param array<int|string, mixed> $data
-     */
-    public function trace(\Stringable|string $message, array $data = [], ?string $component = null): void;
-    public function debug(\Stringable|string $message, array $data = [], ?string $component = null): void;
-    public function info(\Stringable|string $message, array $data = [], ?string $component = null): void;
-    public function warning(\Stringable|string $message, array $data = [], ?string $component = null): void;
-    public function error(\Stringable|string $message, array $data = [], ?string $component = null): void;
-    public function critical(\Stringable|string $message, array $data = [], ?string $component = null): void;
-    public function alert(\Stringable|string $message, array $data = [], ?string $component = null): void;
-    public function emergency(\Stringable|string $message, array $data = [], ?string $component = null): void;
-    public function log(mixed $level, \Stringable|string $message, array $context = [], ?string $component = null): void;
-    /**
-     * @return array<int, LogEntry>
-     */
-    public function filter(LogLevel $minLevel = LogLevel::TRACE, ?string $component = null): array;
-}
-
 interface ModelInterface
 {
     /**

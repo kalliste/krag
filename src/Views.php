@@ -3,10 +3,11 @@
 namespace Krag;
 
 use Psr\Http\Message\ResponseInterface;
+use Psr\Log\LoggerInterface;
 
 class Views implements ViewsInterface
 {
-    public function __construct(private string $templatePath = 'templates', private ?KragLogInterface $log = null)
+    public function __construct(private string $templatePath = 'templates', private ?LoggerInterface $log = null)
     {
     }
 

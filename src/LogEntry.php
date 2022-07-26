@@ -2,6 +2,8 @@
 
 namespace Krag;
 
+use Psr\Log\LogLevel;
+
 class LogEntry
 {
     public int $time;

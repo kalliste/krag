@@ -1,16 +1,17 @@
 <?php
 
+use Analog\Analog;
+use Analog\Handler\LevelBuffer;
+use Analog\Handler\Stderr;
+use Analog\Logger;
 use HttpSoft\Message\{Stream, Response};
 use HttpSoft\ServerRequest\ServerRequestCreator;
 use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
 use Psr\Http\Message\StreamInterface;
-use Krag\{Injection, Config, App, DB, Log, LogLevel, LogInterface};
+use Krag\{Injection, Config, App, DB};
 
 require_once(dirname(__FILE__).'/../src/Interfaces.php');
 require_once(dirname(__FILE__).'/../src/Config.php');
-require_once(dirname(__FILE__).'/../src/LogLevel.php');
-require_once(dirname(__FILE__).'/../src/LogEntry.php');
-require_once(dirname(__FILE__).'/../src/Log.php');
 require_once(dirname(__FILE__).'/../src/Injection.php');
 require_once(dirname(__FILE__).'/../src/Routing.php');
 require_once(dirname(__FILE__).'/../src/Result.php');
@@ -52,9 +53,14 @@ class ExampleConfig extends Krag\Config
 
 function getInjection(): Injection
 {
-    $logger = new Log();
+    $logger = new Logger;
+    $logger->handler (
+        LevelBuffer::init(
+            Stderr::init(),
+            Analog::INFO
+        )
+    );
     $k = new Injection($logger);
-    $k->setMapping(['Log', 'Krag\Log', 'Krag\LogInterface', 'Psr\Log\LoggerInterface', 'LoggerInterface'], $logger);
     $k->setMapping(ServerRequestInterface::class, ServerRequestCreator::create());
     $k->setMapping(ResponseInterface::class, Response::class);
     $k->setMapping(StreamInterface::class, Stream::class);

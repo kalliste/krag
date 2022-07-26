@@ -3,6 +3,7 @@
 namespace Krag;
 
 use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
+use Psr\Log\LoggerInterface;
 
 class App implements AppInterface
 {
@@ -19,7 +20,7 @@ class App implements AppInterface
         protected ViewsInterface $views,
         protected HTTPInterface $http,
         protected RoutingInterface $routing,
-        protected KragLogInterface $log,
+        protected LoggerInterface $log,
         protected string $controllerPath = 'controllers',
         protected array $globalFetchers = [],
     ) {
