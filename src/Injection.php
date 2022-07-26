@@ -24,19 +24,6 @@ class Injection implements InjectionInterface, LoggerAwareInterface
     /**
      * @param array<int|string, mixed> $data
     */
-    protected function debug(\Stringable|string $message, array $data = [], ?string $component = null): void
-    {
-        if ($this->logger instanceof KragLogInterface) {
-            $component = (is_null($component)) ? static::class : $component;
-            $this->logger->debug($message, $data, $component);
-        } else {
-            $this->logger->debug($message, $data);
-        }
-    }
-
-    /**
-     * @param array<int|string, mixed> $data
-    */
     protected function trace(\Stringable|string $message, array $data = [], ?string $component = null): void
     {
         if ($this->logger instanceof KragLogInterface) {
