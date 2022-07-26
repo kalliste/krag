@@ -6,7 +6,7 @@ use Psr\Http\Message\ResponseInterface;
 
 class Views implements ViewsInterface
 {
-    public function __construct(private string $templatePath = 'templates')
+    public function __construct(private string $templatePath = 'templates', private ?KragLogInterface $log = null)
     {
     }
 
@@ -21,8 +21,16 @@ class Views implements ViewsInterface
      */
     protected function fillTemplate(string $fileName, array $data): void
     {
+        $this->debug("fillTemplate $fileName");
         extract($data);
         require(func_get_arg(0));
+    }
+
+    protected function debug(string $message): void
+    {
+        if (!is_null($this->log)) {
+            $this->log->debug($message);
+        }
     }
 
     /**
@@ -32,6 +40,7 @@ class Views implements ViewsInterface
     public function render(string $controllerName, string $methodName, array $methodData, array $globalData, RoutingInterface $routing, ResponseInterface $response): ResponseInterface
     {
         $fileName = $this->templateFile($controllerName, $methodName);
+        $this->debug("render $controllerName $methodName $fileName");
         if (file_exists($fileName)) {
             ob_start();
             $this->fillTemplate($fileName, array_merge(compact('routing'), $globalData, $methodData));

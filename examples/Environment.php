@@ -1,7 +1,10 @@
 <?php
 
+use HttpSoft\Message\{Stream, Response};
 use HttpSoft\ServerRequest\ServerRequestCreator;
-use Krag\{Injection, Config, App, DB, Log};
+use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
+use Psr\Http\Message\StreamInterface;
+use Krag\{Injection, Config, App, DB, Log, LogLevel, LogInterface};
 
 require_once(dirname(__FILE__).'/../src/Interfaces.php');
 require_once(dirname(__FILE__).'/../src/Config.php');
@@ -49,8 +52,12 @@ class ExampleConfig extends Krag\Config
 
 function getInjection(): Injection
 {
-    $k = new Injection(singletons: [ExampleConfig::class, DB::class], logger: new Log());
-    $k->setSingleton('Psr\Http\Message\ServerRequestInterface', ServerRequestCreator::create());
+    $logger = new Log();
+    $k = new Injection($logger);
+    $k->setMapping(['Log', 'Krag\Log', 'Krag\LogInterface', 'Psr\Log\LoggerInterface', 'LoggerInterface'], $logger);
+    $k->setMapping(ServerRequestInterface::class, ServerRequestCreator::create());
+    $k->setMapping(ResponseInterface::class, Response::class);
+    $k->setMapping(StreamInterface::class, Stream::class);
     $config = $k->get(
         ExampleConfig::class,
         ['configFile' => dirname(__FILE__).'/config.example.php']

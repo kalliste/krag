@@ -15,7 +15,7 @@ class DB implements DBInterface
         string $host = '',
         string $username = '',
         string $password = '',
-        private ?LogInterface $log = null,
+        private ?KragLogInterface $log = null,
     ) {
         $dsn = $this->makeDSN($type, $host, $database);
         $this->conn = new \PDO($dsn, $username, $password);

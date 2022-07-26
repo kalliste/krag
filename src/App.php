@@ -19,6 +19,7 @@ class App implements AppInterface
         protected ViewsInterface $views,
         protected HTTPInterface $http,
         protected RoutingInterface $routing,
+        protected KragLogInterface $log,
         protected string $controllerPath = 'controllers',
         protected array $globalFetchers = [],
     ) {
@@ -123,6 +124,7 @@ class App implements AppInterface
 
     public function run(ServerRequestInterface $request): void
     {
+        $this->log->debug("App run");
         $response = $this->handle($request);
         $this->http->sendHeaders($response);
         $this->http->printBody($response);

@@ -5,7 +5,7 @@ namespace Krag;
 /**
  * @implements \IteratorAggregate<int, LogEntry>
  */
-class Log implements LogInterface, \Psr\Log\LoggerAwareInterface, \IteratorAggregate
+class Log implements KragLogInterface, \IteratorAggregate
 {
     /**
      * @var array<int, LogEntry>
@@ -13,13 +13,11 @@ class Log implements LogInterface, \Psr\Log\LoggerAwareInterface, \IteratorAggre
     private array $messages = [];
     public ?\Psr\Log\LoggerInterface $leader = null;
 
-    public function __construct(
-        public ?string $component = null,
-        public LogLevel $minLevel = LogLevel::TRACE,
-    ) {
+    public function __construct(public ?string $component = null, public LogLevel $minLevel = LogLevel::TRACE)
+    {
     }
 
-    public function setLogger(\Psr\Log\LoggerInterface $logger): void
+    public function setLeader(\Psr\Log\LoggerInterface $logger): void
     {
         $this->leader = $logger;
     }
@@ -39,7 +37,7 @@ class Log implements LogInterface, \Psr\Log\LoggerAwareInterface, \IteratorAggre
             $message = (is_string($message)) ? $message : strval($message);
             $component = (is_string($component)) ? $component : $this->component;
             if (is_object($this->leader)) {
-                if ($this->leader instanceof LogInterface) {
+                if ($this->leader instanceof KragLogInterface) {
                     [$this->leader, $level->toString()]($message, $context, $component);
                 } else {
                     [$this->leader, $level->toPSR()]($message, $context);

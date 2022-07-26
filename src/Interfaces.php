@@ -68,11 +68,13 @@ interface InjectionInterface extends ContainerInterface
      * @param array<int|string, mixed> $withValues
      */
     public function call(callable $method, array $withValues = [], bool $preferProvided = false): mixed;
-    public function setSingleton(string $class, ?object $obj = null): InjectionInterface;
-    public function setClassMapping(string $fromClass, string $toClass): InjectionInterface;
+    /**
+     * @param string|array<int|string, string> $from
+     */
+    public function setMapping(string|array $from, object|callable|string $to): InjectionInterface;
 }
 
-interface LogInterface extends \Psr\Log\LoggerInterface
+interface KragLogInterface extends \Psr\Log\LoggerInterface
 {
     /**
      * @param array<int|string, mixed> $data
