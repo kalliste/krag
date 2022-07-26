@@ -140,18 +140,6 @@ class Injection implements InjectionInterface, LoggerAwareInterface
     /**
      * @param array<int|string, mixed> $withValues
      */
-    protected function makeArgumentFallback(
-        \ReflectionParameter $rParam,
-        int $position,
-        array $withValues,
-        bool $preferProvided = false,
-    ): mixed {
-        return null;
-    }
-
-    /**
-     * @param array<int|string, mixed> $withValues
-     */
     protected function makeArgumentForParameter(
         \ReflectionParameter $rParam,
         int $position,
@@ -170,9 +158,6 @@ class Injection implements InjectionInterface, LoggerAwareInterface
             $arg = $arg ?? $this->makeArgumentFromValues($position, $name, $withValues);
         }
         $arg = $arg ?? $this->makeArgumentFromDefaultValue($rParam);
-        if (!$rParam->isOptional()) {
-            $arg = $arg ?? $this->makeArgumentFallback($rParam, $position, $withValues, $preferProvided);
-        }
         $this->trace((is_null($arg)) ? "Made null arg for $name" : "Made non-null arg for $name");
         return $arg;
     }

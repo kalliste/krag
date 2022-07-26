@@ -7,13 +7,15 @@ class LegacyInjection extends Injection
     /**
      * @param array<int|string, mixed> $withValues
      */
-    protected function makeArgumentFallback(
+
+    protected function makeArgumentForParameter(
         \ReflectionParameter $rParam,
         int $position,
         array $withValues,
-        bool $preferProvided = false,
+        bool $preferProvided,
     ): mixed {
-        return match (strval($rParam->getType())) {
+        $arg = parent::makeArgumentForParameter($rParam, $position, $withValues, $preferProvided);
+        return $arg ?? match (strval($rParam->getType())) {
             '' => '',
             'string' => '',
             'int' => 0,
