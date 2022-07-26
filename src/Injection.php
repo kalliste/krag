@@ -31,14 +31,12 @@ class Injection implements InjectionInterface, LoggerAwareInterface
 
     protected function setDefaultMappings(): void
     {
-        $this->setMapping(['Routing', 'Krag\Routing', 'Krag\RoutingInterface'], 'Krag\Routing');
         $this->setMapping(['App', 'Krag\App', 'Krag\AppInterface'], 'Krag\App');
         $this->setMapping(['DB', 'Krag\DB', 'Krag\DBInterface'], 'Krag\DB');
         $this->setMapping(['HTTP', 'Krag\HTTP', 'Krag\HTTPInterface'], 'Krag\HTTP');
         $this->setMapping(['Injection', 'Krag\Injection', 'Krag\InjectionInterface'], 'Krag\Injection');
-        $this->setMapping(['Request', 'Krag\Request', 'Krag\RequestInterface'], 'Krag\Request');
         $this->setMapping(['Result', 'Krag\Result', 'Krag\ResultInterface'], 'Krag\Result');
-        $this->setMapping(['Result', 'Krag\Result', 'Krag\ResultInterface'], 'Krag\Result');
+        $this->setMapping(['Routing', 'Krag\Routing', 'Krag\RoutingInterface'], 'Krag\Routing');
         $this->setMapping(['SQL', 'Krag\SQL', 'Krag\SQLInterface'], 'Krag\SQL');
         $this->setMapping(['Views', 'Krag\Views', 'Krag\ViewsInterface'], 'Krag\Views');
         $this->setMapping(['Psr\Log\LoggerInterface', 'LoggerInterface'], $this->logger);
@@ -56,16 +54,16 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         }
     }
 
-    public function setLeader(?ContainerInterface $injection): void
+    public function setLeader(?ContainerInterface $container): void
     {
-        $this->setLeaderFollowerSanityCheck($injection);
-        $this->leader = $injection;
+        $this->setLeaderFollowerSanityCheck($container);
+        $this->leader = $container;
     }
 
-    public function setFollower(?ContainerInterface $injection): void
+    public function setFollower(?ContainerInterface $container): void
     {
-        $this->setLeaderFollowerSanityCheck($injection);
-        $this->follower = $injection;
+        $this->setLeaderFollowerSanityCheck($container);
+        $this->follower = $container;
     }
 
     /**
@@ -76,7 +74,6 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         if (is_array($from)) {
             array_map(fn ($x) => $this->setMapping($x, $to), $from);
         } else {
-            $from = ltrim($from, '\\');
             $this->mappings[$from] = $to;
         }
         return $this;
@@ -134,7 +131,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         if ($preferProvided) {
             $arg = $this->makeArgumentFromValues($position, $name, $withValues);
         }
-        $arg = $arg ?? $this->getFromContainer($this, $type, $withValues, $preferProvided);
+        $arg = $arg ?? $this->getFromContainer($this, $type);
         if (!$preferProvided) {
             $arg = $arg ?? $this->makeArgumentFromValues($position, $name, $withValues);
         }
@@ -167,7 +164,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
     /**
      * @param array<int|string, mixed> $withValues
      */
-    protected function getFromContainer(?ContainerInterface $container, string $id, array $withValues, bool $preferProvided): mixed
+    protected function getFromContainer(?ContainerInterface $container, string $id, array $withValues = [], bool $preferProvided = false): mixed
     {
         if ($container) {
             try {
@@ -229,7 +226,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
             $obj = $obj ?? $this->getFromContainer($this->follower, $id, $withValues, $preferProvided);
         }
         if (is_callable($mapped)) {
-            return $this->call($mapped, $withValues, false);
+            return $this->call($mapped, $withValues, $preferProvided);
         }
         if (is_null($obj)) {
             throw new class ('Unable to make: '.$id) extends \InvalidArgumentException implements NotFoundExceptionInterface {};
