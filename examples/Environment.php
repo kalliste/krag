@@ -1,14 +1,12 @@
 <?php
 
-use Analog\Analog;
-use Analog\Handler\LevelBuffer;
-use Analog\Handler\Stderr;
-use Analog\Logger;
-use HttpSoft\Message\{Stream, Response};
+use Analog\{Analog, Logger};
+use Analog\Handler\{LevelBuffer, Stderr};
+use HttpSoft\Message\{StreamFactory, ResponseFactory};
 use HttpSoft\ServerRequest\ServerRequestCreator;
-use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
-use Psr\Http\Message\StreamInterface;
 use Krag\{Injection, Config, App, DB};
+use Psr\Http\Message\{ServerRequestInterface, ResponseFactoryInterface, StreamFactoryInterface};
+use Psr\Log\LoggerInterface;
 
 require_once(dirname(__FILE__).'/../src/Interfaces.php');
 require_once(dirname(__FILE__).'/../src/Config.php');
@@ -51,23 +49,31 @@ class ExampleConfig extends Krag\Config
     }
 }
 
-function getInjection(): Injection
+function getInjection(?LoggerInterface $logger = null): Injection
 {
-    $logger = new Logger();
-    $logger->handler(
-        LevelBuffer::init(
-            Stderr::init(),
-            Analog::INFO
-        )
-    );
+    if (is_null($logger)) {
+        $logger = new Logger();
+        $logger->handler(
+            LevelBuffer::init(
+                Stderr::init(),
+                Analog::DEBUG
+            )
+        );
+    }
+
     $k = new Injection($logger);
-    $k->setMapping(ServerRequestInterface::class, ServerRequestCreator::create());
-    $k->setMapping(ResponseInterface::class, Response::class);
-    $k->setMapping(StreamInterface::class, Stream::class);
+
     $config = $k->get(
         ExampleConfig::class,
         ['configFile' => dirname(__FILE__).'/config.example.php']
     );
-    $k->get(DB::class, $config->databaseConfig());
+
+    $k->setMapping(Krag\Config::class, $config);
+    $k->setMapping(Krag\DB::class, $k->get(DB::class, $config->databaseConfig()));
+
+    $k->setMapping(ServerRequestInterface::class, ServerRequestCreator::create());
+    $k->setMapping(ResponseFactoryInterface::class, new ResponseFactory());
+    $k->setMapping(StreamFactoryInterface::class, new StreamFactory());
+
     return $k;
 }

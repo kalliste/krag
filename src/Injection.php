@@ -31,15 +31,15 @@ class Injection implements InjectionInterface, LoggerAwareInterface
 
     protected function setDefaultMappings(): void
     {
-        $this->setMapping(['App', 'Krag\App', 'Krag\AppInterface'], 'Krag\App');
-        $this->setMapping(['DB', 'Krag\DB', 'Krag\DBInterface'], 'Krag\DB');
-        $this->setMapping(['HTTP', 'Krag\HTTP', 'Krag\HTTPInterface'], 'Krag\HTTP');
-        $this->setMapping(['Injection', 'Krag\Injection', 'Krag\InjectionInterface'], 'Krag\Injection');
-        $this->setMapping(['Result', 'Krag\Result', 'Krag\ResultInterface'], 'Krag\Result');
-        $this->setMapping(['Routing', 'Krag\Routing', 'Krag\RoutingInterface'], 'Krag\Routing');
-        $this->setMapping(['SQL', 'Krag\SQL', 'Krag\SQLInterface'], 'Krag\SQL');
-        $this->setMapping(['Views', 'Krag\Views', 'Krag\ViewsInterface'], 'Krag\Views');
-        $this->setMapping(['Psr\Log\LoggerInterface', 'LoggerInterface'], $this->logger);
+        $this->setMapping('Krag\AppInterface', 'Krag\App');
+        $this->setMapping('Krag\DBInterface', 'Krag\DB');
+        $this->setMapping('Krag\HTTPInterface', 'Krag\HTTP');
+        $this->setMapping('Krag\InjectionInterface', 'Krag\Injection');
+        $this->setMapping('Krag\ResultInterface', 'Krag\Result');
+        $this->setMapping('Krag\RoutingInterface', 'Krag\Routing');
+        $this->setMapping('Krag\SQLInterface', 'Krag\SQL');
+        $this->setMapping('Krag\ViewsInterface', 'Krag\Views');
+        $this->setMapping('Psr\Log\LoggerInterface', $this->logger);
     }
 
     public function setLogger(\Psr\Log\LoggerInterface $logger): void
