@@ -16,15 +16,14 @@ class App implements AppInterface
      * @param array<string, callable> $globalFetchers
      */
     public function __construct(
-        protected InjectionInterface $injection,
-        protected ViewsInterface $views,
-        protected HTTPInterface $http,
-        protected ResponseFactoryInterface $responseFactory,
-        protected StreamFactoryInterface $streamFactory,
-        protected RoutingInterface $routing,
-        protected LoggerInterface $log,
-        protected string $controllerPath = 'controllers',
-        protected array $globalFetchers = [],
+        private InjectionInterface $injection,
+        private ViewsInterface $views,
+        private HTTPInterface $http,
+        private ResponseFactoryInterface $responseFactory,
+        private StreamFactoryInterface $streamFactory,
+        private RoutingInterface $routing,
+        private string $controllerPath = 'controllers',
+        private array $globalFetchers = [],
     ) {
     }
 

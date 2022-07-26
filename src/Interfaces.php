@@ -6,6 +6,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
 use Psr\Http\Server\RequestHandlerInterface;
 
+// FIXME make this provides everything needed to be template compatible with Slim Twig-View
 interface RoutingInterface
 {
     public function method(): callable|string|null;
@@ -19,6 +20,7 @@ interface AppInterface extends RequestHandlerInterface
 {
     public function registerController(string|object $controller, ?string $name = null): AppInterface;
     public function setGlobalFetcher(string $name, callable $method): AppInterface;
+    public function run(ServerRequestInterface $request): void;
 }
 
 interface DBInterface
@@ -58,7 +60,7 @@ interface HTTPInterface
     public function printBody(ResponseInterface $response): void;
 }
 
-interface InjectionGetHasInterface extends ContainerInterface
+interface InjectionWithValuesInterface extends ContainerInterface
 {
     /**
      * @param array<int|string, mixed> $withValues
@@ -82,7 +84,7 @@ interface InjectionMappingInterface
     public function setMapping(string|array $from, object|callable|string $to): InjectionInterface;
 }
 
-interface InjectionInterface extends InjectionGetHasInterface, InjectionCallInterface, InjectionMappingInterface
+interface InjectionInterface extends InjectionWithValuesInterface, InjectionCallInterface, InjectionMappingInterface
 {
 }
 
