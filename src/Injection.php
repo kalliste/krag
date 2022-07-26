@@ -175,13 +175,11 @@ class Injection implements InjectionInterface, LoggerAwareInterface
             $arg = $this->makeArgumentFromValues($position, $name, $withValues);
         }
         $arg = $arg ?? $this->makeContainerArgumentFromMyself($type);
-        $arg = $arg ?? $this->getFromContainer($this->leader, $type, $withValues, $preferProvided);
         $arg = $arg ?? $this->getFromContainer($this, $type, $withValues, $preferProvided);
         if (!$preferProvided) {
             $arg = $arg ?? $this->makeArgumentFromValues($position, $name, $withValues);
         }
         $arg = $arg ?? $this->makeArgumentFromDefaultValue($rParam);
-        $arg = $arg ?? $this->getFromContainer($this->follower, $type, $withValues, $preferProvided);
         if (!$rParam->isOptional()) {
             $arg = $arg ?? $this->makeArgumentFallback($rParam, $position, $withValues, $preferProvided);
         }
