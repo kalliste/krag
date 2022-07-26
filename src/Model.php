@@ -2,6 +2,8 @@
 
 namespace Krag;
 
+// FIXME add a Trait that handles in and out filters
+
 class Model implements ModelInterface
 {
     private string $table;

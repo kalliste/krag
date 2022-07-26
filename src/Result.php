@@ -4,6 +4,12 @@ namespace Krag;
 
 use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
 
+// FIXME: Make ResultInterface an extension of Psr\Http\Message\ResponseInterface
+// add canTemplate() / noTemplate() methods, keep redirect()
+// keep withData() and getData()
+// add withTemplate() and getTemplate(), getTemplate() defaults to null
+// Then app can check instanceof and apply templates if appropriate
+
 class Result implements ResultInterface
 {
     private bool $isRedirect = false;

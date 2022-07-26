@@ -58,20 +58,32 @@ interface HTTPInterface
     public function printBody(ResponseInterface $response): void;
 }
 
-interface InjectionInterface extends ContainerInterface
+interface InjectionGetHasInterface extends ContainerInterface
 {
     /**
      * @param array<int|string, mixed> $withValues
      */
     public function get(string $id, array $withValues = [], bool $preferProvided = true);
+}
+
+interface InjectionCallInterface
+{
     /**
      * @param array<int|string, mixed> $withValues
      */
     public function call(callable $method, array $withValues = [], bool $preferProvided = false): mixed;
+}
+
+interface InjectionMappingInterface
+{
     /**
      * @param string|array<int|string, string> $from
      */
     public function setMapping(string|array $from, object|callable|string $to): InjectionInterface;
+}
+
+interface InjectionInterface extends InjectionGetHasInterface, InjectionCallInterface, InjectionMappingInterface
+{
 }
 
 interface ModelInterface
