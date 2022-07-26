@@ -128,15 +128,6 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         return null;
     }
 
-    protected function makeContainerArgumentFromMyself(string $type): ?Injection
-    {
-        if ($this instanceof $type) {
-            $this->trace("matched myself");
-            return $this;
-        }
-        return null;
-    }
-
     protected function makeArgumentFromDefaultValue(\ReflectionParameter $rParam): mixed
     {
         if ($rParam->isOptional()) {
@@ -174,7 +165,6 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         if ($preferProvided) {
             $arg = $this->makeArgumentFromValues($position, $name, $withValues);
         }
-        $arg = $arg ?? $this->makeContainerArgumentFromMyself($type);
         $arg = $arg ?? $this->getFromContainer($this, $type, $withValues, $preferProvided);
         if (!$preferProvided) {
             $arg = $arg ?? $this->makeArgumentFromValues($position, $name, $withValues);
