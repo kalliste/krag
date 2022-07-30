@@ -4,6 +4,9 @@ namespace Krag;
 
 use Psr\Http\Message\ResponseInterface;
 
+/**
+ *
+ */
 class HTTP implements HTTPInterface
 {
     public function __construct()

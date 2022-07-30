@@ -10,6 +10,9 @@ use Psr\Http\Message\{ResponseInterface};
 // add withTemplate() and getTemplate(), getTemplate() defaults to null
 // Then app can check instanceof and apply templates if appropriate
 
+/**
+ *
+ */
 class Result implements ResultInterface
 {
     private bool $isRedirect = false;
@@ -24,10 +27,13 @@ class Result implements ResultInterface
     }
 
     /**
+     * @param callable $method
      * @param array<mixed, mixed> $data
+     * @param int|null $responseCode
      * @param array<string, string> $headers
+     * @return Result
      */
-    public function redirect(callable $method, array $data = [], ?int $responseCode = null, $headers = []): Result
+    public function redirect(callable $method, array $data = [], ?int $responseCode = null, array $headers = []): Result
     {
         $this->isRedirect = true;
         $this->redirectMethod = $method;

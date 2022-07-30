@@ -2,6 +2,9 @@
 
 namespace Krag;
 
+/**
+ *
+ */
 class SQL implements SQLInterface
 {
     // FIXME: this should be $verb $from $join $where $group $order $limit so we can build out of order
@@ -9,7 +12,7 @@ class SQL implements SQLInterface
     protected bool $haveSelect = false;
     protected bool $haveWhere = false;
 
-    public function __construct(private DB $db)
+    public function __construct(private readonly DB $db)
     {
     }
 
@@ -35,7 +38,7 @@ class SQL implements SQLInterface
         $first = true;
         foreach ($conditions as $k => $v) {
             $ret .= ($first) ? '' : ', ';
-            $ret .= $this->fieldValue($k, $v, $table);
+            $ret .= $this->fieldValue($k, $v, $table, $operator);
             $first = false;
         }
         return $ret;
@@ -88,12 +91,6 @@ class SQL implements SQLInterface
 
     public function from(string $table, ?string $alias = null): SQL
     {
-        $ret = '';
-        // FIXME: don't use haveSelect here once we split the internal representation
-        if (!$this->haveSelect) {
-            $ret .= 'SELECT ';
-            $this->haveSelect = true;
-        }
         $ret = ' FROM '.$this->db->tableEscape($table);
         $ret .= (is_string($alias)) ? ' AS '.$this->db->aliasEscape($alias) : '';
         $this->query .= $ret;
@@ -213,8 +210,9 @@ class SQL implements SQLInterface
         $ret = ' ORDER BY '.$this->orderPart($sort, $maybeDesc);
         $moreSorts = [];
         foreach ($more as $k => $v) {
-            if ('sort' == substr($k, 0, 4)) {
-                $which = 'sort'.strval(intval(substr($k, 4)));
+            if (str_starts_with($k, 'sort')) {
+                $whichSort = intval(substr($k, 4));
+                $which = sprintf("sort%s", $whichSort);
                 $moreSorts[$which] = $v;
             }
         }
@@ -255,7 +253,7 @@ class SQL implements SQLInterface
             $more = array_filter(
                 $pagingParams,
                 fn ($k) => (
-                    ('sort' == substr($k, 0, 4)) && (intval(substr($k, 4)) > 0) ||
+                    (str_starts_with($k, 'sort')) && (intval(substr($k, 4)) > 0) ||
                     ('order' == substr($k, 0, 4)) && (intval(substr($k, 4)) > 0)
                 )
             );
@@ -365,9 +363,9 @@ class SQL implements SQLInterface
         if (count($newData)) {
             $table = $this->db->tableEscape($table);
             $keyVal = $this->fieldsValues($newData);
-            $query = 'UPDATE '.$table.' SET '.$keyVal;
-            $where = $this->where($conditions);
-            $result = $this->db->query($query);
+            $this->query = 'UPDATE '.$table.' SET '.$keyVal;
+            $this->where($conditions);
+            $result = $this->db->query($this->query);
             return $this->db->affectedRows($result);
         }
         return 0;
@@ -379,9 +377,9 @@ class SQL implements SQLInterface
     public function delete(string $table, array $conditions = []): int
     {
         $table = $this->db->tableEscape($table);
-        $query = 'DELETE FROM '.$table;
+        $this->query = 'DELETE FROM '.$table;
         $this->where($conditions);
-        $result = $this->db->query($query);
+        $result = $this->db->query($this->query);
         return $this->db->affectedRows($result);
     }
 

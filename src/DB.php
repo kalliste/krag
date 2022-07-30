@@ -2,25 +2,29 @@
 
 namespace Krag;
 
+use PDO;
 use Psr\Log\LoggerInterface;
 
+/**
+ *
+ */
 class DB implements DBInterface
 {
-    private \PDO $conn;
+    private PDO $conn;
     private string $columnQuoteCharLeft;
     private string $columnQuoteCharRight;
     public string $randomFuncSQL;
 
     public function __construct(
-        string $type,
-        string $database,
-        string $host = '',
-        string $username = '',
-        string $password = '',
-        private ?LoggerInterface $log = null,
+        string                            $type,
+        string                            $database,
+        string                            $host = '',
+        string                            $username = '',
+        string                            $password = '',
+        private readonly ?LoggerInterface $log = null,
     ) {
         $dsn = $this->makeDSN($type, $host, $database);
-        $this->conn = new \PDO($dsn, $username, $password);
+        $this->conn = new PDO($dsn, $username, $password);
         $this->setDatabaseParameters($type);
     }
 
@@ -69,7 +73,7 @@ class DB implements DBInterface
         return $this->conn->rollBack();
     }
 
-    private function logAnyError(\PDO|\PDOStatement $obj): void
+    private function logAnyError(PDO|\PDOStatement $obj): void
     {
         if ($obj->errorCode() != '00000') {
             if (is_object($this->log)) {
@@ -98,7 +102,7 @@ class DB implements DBInterface
      */
     public function fetchAssoc(object $result): array
     {
-        return $result->fetch(\PDO::FETCH_ASSOC);
+        return $result->fetch(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -106,7 +110,7 @@ class DB implements DBInterface
      */
     public function fetchRow(object $result): array
     {
-        return $result->fetch(\PDO::FETCH_NUM);
+        return $result->fetch(PDO::FETCH_NUM);
     }
 
     public function closeCursor(object $result): bool
@@ -138,7 +142,7 @@ class DB implements DBInterface
 
     private function noSpecials(string $toEscape): string
     {
-        return preg_replace('/[^A-Za-z0-9_]/', '', $toEscape);
+        return preg_replace('/\W/', '', $toEscape);
     }
 
     public function tableEscape(string $toEscape): string
@@ -171,7 +175,7 @@ class DB implements DBInterface
     public function setBlob(string $query, string $blob): object
     {
         $statement = $this->conn->prepare($query);
-        $statement->bindParam(1, $blob, \PDO::PARAM_LOB);
+        $statement->bindParam(1, $blob, PDO::PARAM_LOB);
         $this->begin();
         $statement->execute();
         $this->commit();

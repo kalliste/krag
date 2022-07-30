@@ -4,11 +4,14 @@ namespace Krag;
 
 // FIXME add a Trait that handles in and out filters
 
+/**
+ *
+ */
 class Model implements ModelInterface
 {
     private string $table;
 
-    public function __construct(private SQLInterface $sql, ?string $table = null)
+    public function __construct(private readonly SQLInterface $sql, ?string $table = null)
     {
         $this->table = $table ?? strtolower(static::class);
     }
@@ -51,6 +54,8 @@ class Model implements ModelInterface
     }
 
     /**
+     * @param string $keyColumn
+     * @param string $valueColumn
      * @param array<string, mixed> $conditions
      * @param array<string, mixed> $pagingParams
      * @return array<mixed, mixed>

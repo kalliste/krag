@@ -5,16 +5,21 @@ namespace Krag;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
+use const DIRECTORY_SEPARATOR;
+
+/**
+ *
+ */
 class Views implements ViewsInterface
 {
-    public function __construct(private string $templatePath = 'templates', private ?LoggerInterface $log = null)
+    public function __construct(private readonly string $templatePath = 'templates', private readonly ?LoggerInterface $log = null)
     {
     }
 
     protected function templateFile(string $controllerName, string $methodName): string
     {
         $controllerName = str_replace('\\', '_', $controllerName);
-        return $this->templatePath.\DIRECTORY_SEPARATOR.$controllerName.\DIRECTORY_SEPARATOR.$methodName.'.html.php';
+        return $this->templatePath. DIRECTORY_SEPARATOR . $controllerName . DIRECTORY_SEPARATOR . $methodName . '.html.php';
     }
 
     /**
@@ -35,8 +40,13 @@ class Views implements ViewsInterface
     }
 
     /**
+     * @param string $controllerName
+     * @param string $methodName
      * @param array<string, mixed> $methodData
      * @param array<string, mixed> $globalData
+     * @param RoutingInterface $routing
+     * @param ResponseInterface $response
+     * @return ResponseInterface
      */
     public function render(string $controllerName, string $methodName, array $methodData, array $globalData, RoutingInterface $routing, ResponseInterface $response): ResponseInterface
     {

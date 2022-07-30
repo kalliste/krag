@@ -4,9 +4,12 @@ namespace Krag;
 
 use Psr\Http\Message\ServerRequestInterface;
 
+/**
+ *
+ */
 class Routing implements RoutingInterface
 {
-    public function __construct(private ServerRequestInterface $request)
+    public function __construct(private readonly ServerRequestInterface $request)
     {
     }
 
@@ -33,7 +36,7 @@ class Routing implements RoutingInterface
     {
         $fromCurrent = $this->request->getServerParams()['REQUEST_URI'] ?? '';
         $source = explode('/', trim($fromCurrent, '/'));
-        while (count($source) && count($target) && $source[0] == $target[0]) {
+        while (count($source) && is_array($target) && count($target) && $source[0] == $target[0]) {
             $source = array_slice($source, 1);
             $target = array_slice($target, 1);
         }

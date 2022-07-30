@@ -7,15 +7,25 @@ use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
 use Psr\Http\Server\RequestHandlerInterface;
 
 // FIXME make this provides everything needed to be template compatible with Slim Twig-View
+
+/**
+ *
+ */
 interface RoutingInterface
 {
     public function method(): callable|string|null;
+
     /**
-     * @param array<mixed, mixed> $data
+     * @param callable $target
+     * @param array<int|string, mixed> $data
+     * @return string
      */
     public function link(callable $target, array $data = []): string;
 }
 
+/**
+ *
+ */
 interface AppInterface extends RequestHandlerInterface
 {
     public function registerController(string|object $controller, ?string $name = null): AppInterface;
@@ -23,6 +33,9 @@ interface AppInterface extends RequestHandlerInterface
     public function run(ServerRequestInterface $request): void;
 }
 
+/**
+ *
+ */
 interface DBInterface
 {
     public function begin(): bool;
@@ -46,20 +59,29 @@ interface DBInterface
      */
     public function escape(string|array $toEscape): string|array;
     public function tableEscape(string $toEscape): string;
+
     /**
-      * @param string|array<mixed> $toEscape
-      */
+     * @param string|array<mixed> $toEscape
+     * @param string|null $table
+     * @return string
+     */
     public function columnEscape(string|array $toEscape, ?string $table = null): string;
     public function aliasEscape(string $toEscape): string;
     public function setBlob(string $query, string $blob): object;
 }
 
+/**
+ *
+ */
 interface HTTPInterface
 {
     public function sendHeaders(ResponseInterface $response): void;
     public function printBody(ResponseInterface $response): void;
 }
 
+/**
+ *
+ */
 interface InjectionWithValuesInterface extends ContainerInterface
 {
     /**
@@ -68,6 +90,9 @@ interface InjectionWithValuesInterface extends ContainerInterface
     public function get(string $id, array $withValues = [], bool $preferProvided = true);
 }
 
+/**
+ *
+ */
 interface InjectionCallInterface
 {
     /**
@@ -76,6 +101,9 @@ interface InjectionCallInterface
     public function call(callable $method, array $withValues = [], bool $preferProvided = false): mixed;
 }
 
+/**
+ *
+ */
 interface InjectionMappingInterface
 {
     /**
@@ -84,10 +112,16 @@ interface InjectionMappingInterface
     public function setMapping(string|array $from, object|callable|string $to): InjectionInterface;
 }
 
+/**
+ *
+ */
 interface InjectionInterface extends InjectionWithValuesInterface, InjectionCallInterface, InjectionMappingInterface
 {
 }
 
+/**
+ *
+ */
 interface ModelInterface
 {
     /**
@@ -110,7 +144,10 @@ interface ModelInterface
      * @return array<int, array<string, mixed>>
      */
     public function records(array $conditions = [], array $pagingParams = []): array;
+
     /**
+     * @param string $keyColumn
+     * @param string $valueColumn
      * @param array<string, mixed> $conditions
      * @param array<string, mixed> $pagingParams
      * @return array<mixed, mixed>
@@ -136,13 +173,19 @@ interface ModelInterface
     public function replace(array $conditions, array $records): int;
 }
 
+/**
+ *
+ */
 interface ResultInterface
 {
     /**
-     * @param array<mixed, mixed> $data
+     * @param callable $method
+     * @param array<string, mixed> $data
+     * @param int|null $responseCode
      * @param array<string, string> $headers
+     * @return ResultInterface
      */
-    public function redirect(callable $method, array $data = [], ?int $responseCode = null, $headers = []): ResultInterface;
+    public function redirect(callable $method, array $data = [], ?int $responseCode = null, array $headers = []): ResultInterface;
     public function isRedirect(): bool;
     /**
      * @param array<string, mixed> $data
@@ -165,6 +208,9 @@ interface ResultInterface
     public function applyHeadersToResponse(ResponseInterface $response, RoutingInterface $routing): ResponseInterface;
 }
 
+/**
+ *
+ */
 interface SQLInterface
 {
     /**
@@ -244,6 +290,9 @@ interface SQLInterface
     public function setBlob(string $table, string $column, string $blob, array $conditions = []): int;
 }
 
+/**
+ *
+ */
 interface ViewsInterface
 {
     /**
