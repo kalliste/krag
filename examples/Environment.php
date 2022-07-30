@@ -2,10 +2,10 @@
 
 use Analog\{Analog, Logger};
 use Analog\Handler\{LevelBuffer, Stderr};
-use HttpSoft\Message\{StreamFactory, ResponseFactory};
+use HttpSoft\Message\{ResponseFactory, StreamFactory};
 use HttpSoft\ServerRequest\ServerRequestCreator;
-use Krag\{Injection, Config, App, DB};
-use Psr\Http\Message\{ServerRequestInterface, ResponseFactoryInterface, StreamFactoryInterface};
+use Krag\{DB, Injection};
+use Psr\Http\Message\{ResponseFactoryInterface, ServerRequestInterface, StreamFactoryInterface};
 use Psr\Log\LoggerInterface;
 
 require_once(dirname(__FILE__).'/../src/Interfaces.php');

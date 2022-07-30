@@ -2,8 +2,7 @@
 
 namespace Krag;
 
-use Psr\Http\Message\{StreamFactoryInterface, ResponseFactoryInterface, ResponseInterface, ServerRequestInterface};
-use Psr\Log\LoggerInterface;
+use Psr\Http\Message\{ResponseFactoryInterface, ResponseInterface, ServerRequestInterface, StreamFactoryInterface};
 
 class App implements AppInterface
 {

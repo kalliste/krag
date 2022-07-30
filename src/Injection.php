@@ -6,6 +6,9 @@ use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
+use Stringable;
+
+// FIXME break off Injection to its own class
 
 class Injection implements InjectionInterface, LoggerAwareInterface
 {
@@ -24,7 +27,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
     /**
      * @param array<int|string, mixed> $data
     */
-    protected function trace(\Stringable|string $message, array $data = [], ?string $component = null): void
+    protected function trace(Stringable|string $message, array $data = [], ?string $component = null): void
     {
         $this->logger->debug($message, $data);
     }
@@ -42,7 +45,7 @@ class Injection implements InjectionInterface, LoggerAwareInterface
         $this->setMapping('Psr\Log\LoggerInterface', $this->logger);
     }
 
-    public function setLogger(\Psr\Log\LoggerInterface $logger): void
+    public function setLogger(LoggerInterface $logger): void
     {
         $this->logger = $logger;
     }

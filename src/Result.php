@@ -2,7 +2,7 @@
 
 namespace Krag;
 
-use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
+use Psr\Http\Message\{ResponseInterface};
 
 // FIXME: Make ResultInterface an extension of Psr\Http\Message\ResponseInterface
 // add canTemplate() / noTemplate() methods, keep redirect()
